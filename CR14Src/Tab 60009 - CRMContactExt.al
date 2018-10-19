@@ -575,18 +575,18 @@ table 60009 "IOSH_CRMContact"
             ExternalName = 'aging30';
             ExternalType = 'Money';
         }
-        field(71; StateCode; Option)
-        {
-            Caption = 'Status';
-            Description = 'Shows whether the contact is active or inactive. Inactive contacts are read-only and can''t be edited unless they are reactivated.';
-            ExternalAccess = Modify;
-            ExternalName = 'statecode';
-            ExternalType = 'State';
-            InitValue = Active;
-            OptionCaption = 'Active,Inactive';
-            OptionOrdinalValues = 0, 1;
-            OptionMembers = Active,Inactive;
-        }
+        /*    field(71; StateCode; Option)
+           {
+               Caption = 'Status';
+               Description = 'Shows whether the contact is active or inactive. Inactive contacts are read-only and can''t be edited unless they are reactivated.';
+               ExternalAccess = Modify;
+               ExternalName = 'statecode';
+               ExternalType = 'State';
+               InitValue = Active;
+               OptionCaption = 'Active,Inactive';
+               OptionOrdinalValues = 0, 1;
+               OptionMembers = Active,Inactive;
+           } */
         field(72; Aging60; Decimal)
         {
             Caption = 'Aging 60';
@@ -600,7 +600,7 @@ table 60009 "IOSH_CRMContact"
             Caption = 'Status Reason';
             Description = 'Select the contact''s status.';
             ExternalName = 'statuscode';
-            ExternalType = 'Status';
+            ExternalType = 'Picklist';
             InitValue = " ";
             OptionCaption = ' ,Active,Inactive';
             OptionOrdinalValues = - 1, 1, 2;
@@ -1053,17 +1053,17 @@ table 60009 "IOSH_CRMContact"
             ExternalType = 'Lookup';
             TableRelation = "CRM Contact".ContactId;
         }
-        field(131; PreferredAppointmentDayCode; Option)
-        {
-            Caption = 'Preferred Day';
-            Description = 'Select the preferred day of the week for service appointments.';
-            ExternalName = 'preferredappointmentdaycode';
-            ExternalType = 'Picklist';
-            InitValue = " ";
-            OptionCaption = ' ,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday';
-            OptionOrdinalValues = - 1, 0, 1, 2, 3, 4, 5, 6;
-            OptionMembers = " ",Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday;
-        }
+        /*    field(131; PreferredAppointmentDayCode; Option)
+           {
+               Caption = 'Preferred Day';
+               Description = 'Select the preferred day of the week for service appointments.';
+               ExternalName = 'preferredappointmentdaycode';
+               ExternalType = 'Picklist';
+               InitValue = " ";
+               OptionCaption = ' ,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday';
+               OptionOrdinalValues = - 1, 0, 1, 2, 3, 4, 5, 6;
+               OptionMembers = " ",Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday;
+           } */
         field(132; PreferredAppointmentTimeCode; Option)
         {
             Caption = 'Preferred Time';

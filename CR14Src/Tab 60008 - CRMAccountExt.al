@@ -456,18 +456,18 @@ table 60008 "IOSH_CRMAccount"
             ExternalName = 'aging30';
             ExternalType = 'Money';
         }
-        field(54; StateCode; Option)
-        {
-            Caption = 'Status';
-            Description = 'Shows whether the account is active or inactive. Inactive accounts are read-only and can''t be edited unless they are reactivated.';
-            ExternalAccess = Modify;
-            ExternalName = 'statecode';
-            ExternalType = 'State';
-            InitValue = Active;
-            OptionCaption = 'Active,Inactive';
-            OptionOrdinalValues = 0, 1;
-            OptionMembers = Active,Inactive;
-        }
+        /*      field(54; StateCode; Option)
+             {
+                 Caption = 'Status';
+                 Description = 'Shows whether the account is active or inactive. Inactive accounts are read-only and can''t be edited unless they are reactivated.';
+                 ExternalAccess = Modify;
+                 ExternalName = 'statecode';
+                 ExternalType = 'State';
+                 InitValue = Active;
+                 OptionCaption = 'Active,Inactive';
+                 OptionOrdinalValues = 0, 1;
+                 OptionMembers = Active,Inactive;
+             } */
         field(55; Aging60; Decimal)
         {
             Caption = 'Aging 60';
@@ -481,7 +481,7 @@ table 60008 "IOSH_CRMAccount"
             Caption = 'Status Reason';
             Description = 'Select the account''s status.';
             ExternalName = 'statuscode';
-            ExternalType = 'Status';
+            ExternalType = 'Picklist';
             InitValue = " ";
             OptionCaption = ' ,Active,Inactive';
             OptionOrdinalValues = - 1, 1, 2;
@@ -908,7 +908,7 @@ table 60008 "IOSH_CRMAccount"
             OptionCaption = ' ,systemuser,team';
             OptionMembers = " ",systemuser,team;
         }
-        field(111; PreferredAppointmentDayCode; Option)
+        /* field(111; PreferredAppointmentDayCode; Option)
         {
             Caption = 'Preferred Day';
             Description = 'Select the preferred day of the week for service appointments.';
@@ -918,7 +918,7 @@ table 60008 "IOSH_CRMAccount"
             OptionCaption = ' ,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday';
             OptionOrdinalValues = - 1, 0, 1, 2, 3, 4, 5, 6;
             OptionMembers = " ",Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday;
-        }
+        } */
         field(112; PreferredSystemUserId; Guid)
         {
             Caption = 'Preferred User';

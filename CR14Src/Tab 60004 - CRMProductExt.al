@@ -218,10 +218,10 @@ table 60004 IOSH_CRM_Product
             Description = 'Status of the product.';
             ExternalAccess = Modify;
             ExternalName = 'statecode';
-            ExternalType = 'State';
+            ExternalType = 'Picklist';
             InitValue = Draft;
             OptionCaption = 'Active,Retired,Draft,Under Revision';
-            OptionOrdinalValues = 0, 1, 2, 3;
+            OptionOrdinalValues = - 1, 1, 2, 3;
             OptionMembers = Active,Retired,Draft,UnderRevision;
         }
         field(28; ModifiedBy; Guid)
@@ -233,7 +233,7 @@ table 60004 IOSH_CRM_Product
             ExternalType = 'Lookup';
             TableRelation = "CRM Systemuser".SystemUserId;
         }
-        field(29; StatusCode; Option)
+        /* field(29; StatusCode; Option)
         {
             Caption = 'Status Reason';
             Description = 'Reason for the status of the product.';
@@ -243,7 +243,7 @@ table 60004 IOSH_CRM_Product
             OptionCaption = ' ,Active,Retired,Draft,Under Revision';
             OptionOrdinalValues = - 1, 1, 2, 0, 3;
             OptionMembers = " ",Active,Retired,Draft,UnderRevision;
-        }
+        } */
         field(30; VersionNumber; BigInteger)
         {
             Caption = 'Version Number';
