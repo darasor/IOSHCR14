@@ -1266,7 +1266,7 @@ table 60008 "IOSH_CRMAccount"
             ExternalType = 'Picklist';
             InitValue = UK;
             OptionCaption = 'UK,EU,ROW';
-            OptionOrdinalValues = 1, 2, 3;
+            OptionOrdinalValues = 217190000, 217190001, 217190002;
             OptionMembers = UK,EU,ROW;
         }
     }

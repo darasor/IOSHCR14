@@ -1550,8 +1550,15 @@ table 60009 "IOSH_CRMContact"
             ExternalType = 'Picklist';
             InitValue = UK;
             OptionCaption = 'UK,EU,ROW';
-            OptionOrdinalValues = 1, 2, 3;
+            OptionOrdinalValues = 217190000, 217190001, 217190002;
             OptionMembers = UK,EU,ROW;
+        }
+        field(50001; "Create Customer in BC"; Boolean)
+        {
+            Caption = 'Create Customer in BC';
+            ExternalType = 'Boolean';
+            ExternalName = 'iosh_createcustomerinbc';
+
         }
     }
 

@@ -1,0 +1,125 @@
+<PermissionSets>
+    <PermissionSet RoleID = "D365 BASIC" RoleName = "Dynamics 365 Basic access">
+        <Permission>
+            <ObjectType>0</ObjectType>
+            <ObjectID>60000</ObjectID>
+            <ReadPermission>Yes</ReadPermission>
+            <InsertPermission>Yes</InsertPermission>
+            <ModifyPermission>Yes</ModifyPermission>
+            <DeletePermission>Yes</DeletePermission>
+            <ExecutePermission>Yes</ExecutePermission>
+            <SecurityFilter />
+        </Permission>
+         <Permission>
+            <ObjectType>0</ObjectType>
+            <ObjectID>60001</ObjectID>
+            <ReadPermission>Yes</ReadPermission>
+            <InsertPermission>Yes</InsertPermission>
+            <ModifyPermission>Yes</ModifyPermission>
+            <DeletePermission>Yes</DeletePermission>
+            <ExecutePermission>Yes</ExecutePermission>
+            <SecurityFilter />
+        </Permission>
+         <Permission>
+            <ObjectType>0</ObjectType>
+            <ObjectID>60002</ObjectID>
+            <ReadPermission>Yes</ReadPermission>
+            <InsertPermission>Yes</InsertPermission>
+            <ModifyPermission>Yes</ModifyPermission>
+            <DeletePermission>Yes</DeletePermission>
+            <ExecutePermission>Yes</ExecutePermission>
+            <SecurityFilter />
+        </Permission>
+          <Permission>
+            <ObjectType>0</ObjectType>
+            <ObjectID>60003</ObjectID>
+            <ReadPermission>Yes</ReadPermission>
+            <InsertPermission>Yes</InsertPermission>
+            <ModifyPermission>Yes</ModifyPermission>
+            <DeletePermission>Yes</DeletePermission>
+            <ExecutePermission>Yes</ExecutePermission>
+            <SecurityFilter />
+        </Permission>
+        <Permission>
+            <ObjectType>0</ObjectType>
+            <ObjectID>60004</ObjectID>
+            <ReadPermission>Yes</ReadPermission>
+            <InsertPermission>Yes</InsertPermission>
+            <ModifyPermission>Yes</ModifyPermission>
+            <DeletePermission>Yes</DeletePermission>
+            <ExecutePermission>Yes</ExecutePermission>
+            <SecurityFilter />
+        </Permission>
+        <Permission>
+            <ObjectType>0</ObjectType>
+            <ObjectID>60005</ObjectID>
+            <ReadPermission>Yes</ReadPermission>
+            <InsertPermission>Yes</InsertPermission>
+            <ModifyPermission>Yes</ModifyPermission>
+            <DeletePermission>Yes</DeletePermission>
+            <ExecutePermission>Yes</ExecutePermission>
+            <SecurityFilter />
+        </Permission>
+             <Permission>
+            <ObjectType>0</ObjectType>
+            <ObjectID>60006</ObjectID>
+            <ReadPermission>Yes</ReadPermission>
+            <InsertPermission>Yes</InsertPermission>
+            <ModifyPermission>Yes</ModifyPermission>
+            <DeletePermission>Yes</DeletePermission>
+            <ExecutePermission>Yes</ExecutePermission>
+            <SecurityFilter />
+        </Permission>
+             <Permission>
+            <ObjectType>0</ObjectType>
+            <ObjectID>60007</ObjectID>
+            <ReadPermission>Yes</ReadPermission>
+            <InsertPermission>Yes</InsertPermission>
+            <ModifyPermission>Yes</ModifyPermission>
+            <DeletePermission>Yes</DeletePermission>
+            <ExecutePermission>Yes</ExecutePermission>
+            <SecurityFilter />
+        </Permission>
+             <Permission>
+            <ObjectType>0</ObjectType>
+            <ObjectID>60008</ObjectID>
+            <ReadPermission>Yes</ReadPermission>
+            <InsertPermission>Yes</InsertPermission>
+            <ModifyPermission>Yes</ModifyPermission>
+            <DeletePermission>Yes</DeletePermission>
+            <ExecutePermission>Yes</ExecutePermission>
+            <SecurityFilter />
+        </Permission>
+             <Permission>
+            <ObjectType>0</ObjectType>
+            <ObjectID>60009</ObjectID>
+            <ReadPermission>Yes</ReadPermission>
+            <InsertPermission>Yes</InsertPermission>
+            <ModifyPermission>Yes</ModifyPermission>
+            <DeletePermission>Yes</DeletePermission>
+            <ExecutePermission>Yes</ExecutePermission>
+            <SecurityFilter />
+        </Permission>
+             <Permission>
+            <ObjectType>0</ObjectType>
+            <ObjectID>60011</ObjectID>
+            <ReadPermission>Yes</ReadPermission>
+            <InsertPermission>Yes</InsertPermission>
+            <ModifyPermission>Yes</ModifyPermission>
+            <DeletePermission>Yes</DeletePermission>
+            <ExecutePermission>Yes</ExecutePermission>
+            <SecurityFilter />
+        </Permission>
+            
+             <Permission>
+            <ObjectType>0</ObjectType>
+            <ObjectID>60014</ObjectID>
+            <ReadPermission>Yes</ReadPermission>
+            <InsertPermission>Yes</InsertPermission>
+            <ModifyPermission>Yes</ModifyPermission>
+            <DeletePermission>Yes</DeletePermission>
+            <ExecutePermission>Yes</ExecutePermission>
+            <SecurityFilter />
+        </Permission>
+    </PermissionSet>
+</PermissionSets>
