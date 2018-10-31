@@ -5,20 +5,27 @@ codeunit 60001 "IOSH_Customer Management"
 
     end;
 
-    procedure applyCustomerTemplate(pCompanyName: code[30]; TemplateCode: code[10]; pCustomer: record customer)
+    procedure applyCustomerTemplate(pCompanyName: code[30]; TemplateCode: Option UK,EU,ROW; pCustomer: record customer)
     var
         CustTemplate: Record "Customer Template";
         DefaultDim: Record "Default Dimension";
         DefaultDim2: Record "Default Dimension";
         Cust: Record customer;
+        SalesRecSetup: Record "Sales & Receivables Setup";
     begin
-
+        CustTemplate.ChangeCompany(pCompanyName);
+        SalesRecSetup.ChangeCompany(pCompanyName);
+        SalesRecSetup.get;
+        case TemplateCode of
+            Templatecode::EU:
+                if custtemplate.get(SalesRecSetup."EU Customer Template Code") then;
+            TemplateCode::UK:
+                if CustTemplate.get(SalesRecSetup."UK Customer Template Code") then;
+            TemplateCode::ROW:
+                if CustTemplate.get(SalesRecSetup."ROW Customer Template Code") then;
+        end;
         cust.ChangeCompany(pCompanyName);
         if cust.get(pCustomer."No.") then;
-
-        CustTemplate.ChangeCompany(pCompanyName);
-        IF TemplateCode <> '' THEN
-            IF CustTemplate.GET(TemplateCode) THEN;
 
         IF CustTemplate.Code <> '' THEN BEGIN
             IF Cust."Territory Code" = '' THEN
@@ -65,7 +72,10 @@ codeunit 60001 "IOSH_Customer Management"
 
     procedure createCustomerUseCRMAccount(CRMAccountId: Guid; Var Customer: Record customer; pCompanyName: code[30])
     var
-        CRMAccount: Record "CRM Account";
+        CRMAccount: Record IOSH_CRMAccount;
+        NAVContact: Record Contact;
+        CRMIntegrationRecord: Record "CRM Integration Record";
+
     begin
         Customer.ChangeCompany(pCompanyName);
         if CRMAccount.get(CRMAccountId) then begin
@@ -84,7 +94,14 @@ codeunit 60001 "IOSH_Customer Management"
             Customer."Phone No." := CRMAccount.Telephone1;
             Customer."Primary Contact No." := CRMAccount.PrimaryContactId;
             Customer.Insert(false); //This will create contact for this account
-            InsertNewContact(Customer, pCompanyName);
+            InsertNewContact(Customer, NAVContact, pCompanyName);
+
+            applyCustomerTemplate(pCompanyName, CRMAccount."BC Template Code", Customer);
+
+            //Create coupling
+            CRMIntegrationRecord.ChangeCompany(pCompanyName);
+            CRMIntegrationRecord.CoupleRecordIdToCRMID(Customer.RecordId(), CRMAccountId);
+
         end else
             Error('Cannot find CRM Account %1', CRMAccountId);
 
@@ -92,7 +109,7 @@ codeunit 60001 "IOSH_Customer Management"
 
     procedure createCustomerUseCRMContact(CRMContactId: Guid; Var Customer: Record customer; pCompanyName: code[30])
     var
-        CRMContact: Record IOSH_CRMContact;
+        IOSH_CRMContact: Record IOSH_CRMContact;
         NAVContact: Record Contact;
         CRMIntegrationRecord: Record "CRM Integration Record";
         RecordID: RecordId;
@@ -103,6 +120,7 @@ codeunit 60001 "IOSH_Customer Management"
         //else create customer then contact type company
         //if find crmcontact in contact then create customer from NAV contact
         Customer.ChangeCompany(pCompanyName);
+
         if TisCRMIntegMgt.FindRecordIDFromID(CRMContactId, Database::Contact, RecordID, pCompanyName) then begin
             RecRef.ChangeCompany(pCompanyName);
             NAVContact.ChangeCompany(pCompanyName);
@@ -113,36 +131,47 @@ codeunit 60001 "IOSH_Customer Management"
                 if CheckForExistingRelationships(ContBusRel, ContBusRel."Link to Table"::Customer, NAVContact) then begin
                     Customer.get(ContBusRel."No.");
                     exit;
-                end else
+                end else begin
                     CreateCustomer(Customer, NAVContact, pCompanyName);
+                    //Apply template 
+                    if IOSH_CRMContact.get(CRMContactId) then
+                        applyCustomerTemplate(pCompanyName, IOSH_CRMContact."BC Template Code", Customer);
+                end;
             end;
 
-        end else
+        end else begin
 
-            if CRMContact.get(CRMContactId) then begin
+            if IOSH_CRMContact.get(CRMContactId) then begin
                 //find integration record id
                 Customer.init;
-                Customer.Name := CRMContact.FullName;
+                Customer.Name := IOSH_CRMContact.FullName;
                 Customer."Partner Type" := Customer."Partner Type"::Person;
-                Customer.Address := CRMContact.Address1_Line1;
-                Customer."Address 2" := CRMContact.Address1_Line2;
-                Customer."Address 2" := CRMContact.Address1_Line2;
-                Customer."Post Code" := CRMContact.Address1_PostalCode;
-                Customer.City := CRMContact.Address1_City;
-                Customer."Country/Region Code" := CRMContact.Address1_Country;
-                Customer.County := CRMContact.Address1_StateOrProvince;
-                Customer."E-Mail" := CRMContact.EMailAddress1;
-                Customer."Fax No." := CRMContact.Fax;
-                Customer."Home Page" := CRMContact.WebSiteURL;
-                Customer."Phone No." := CRMContact.Telephone1;
+                Customer.Address := IOSH_CRMContact.Address1_Line1;
+                Customer."Address 2" := IOSH_CRMContact.Address1_Line2;
+                Customer."Address 2" := IOSH_CRMContact.Address1_Line2;
+                Customer."Post Code" := IOSH_CRMContact.Address1_PostalCode;
+                Customer.City := IOSH_CRMContact.Address1_City;
+                Customer."Country/Region Code" := IOSH_CRMContact.Address1_Country;
+                Customer.County := IOSH_CRMContact.Address1_StateOrProvince;
+                Customer."E-Mail" := IOSH_CRMContact.EMailAddress1;
+                Customer."Fax No." := IOSH_CRMContact.Fax;
+                Customer."Home Page" := IOSH_CRMContact.WebSiteURL;
+                Customer."Phone No." := IOSH_CRMContact.Telephone1;
                 Customer."Dynamics 365 Contact Customer" := true;
                 Customer.insert(false); //create only customer if the contact already sync
-                InsertNewContact(Customer, pCompanyName);
+                InsertNewContact(Customer, NAVContact, pCompanyName);
+
+                applyCustomerTemplate(pCompanyName, IOSH_CRMContact."BC Template Code", Customer);
+
+                //Couple contact with CRM contact instead of Customer as it's not going to create account in CRM
+                CRMIntegrationRecord.ChangeCompany((pCompanyName));
+                CRMIntegrationRecord.CoupleRecordIdToCRMID(NAVContact.RecordId(), CRMContactId);
             end else
                 Error('Cannot find CRM Contact %1', CRMContactId);
+        end;
     end;
-    //Create Customer if CRM Contact has create customer in BC
-    procedure createCustomerFromContact(var Contact: Record Contact; templateCode: code[10])
+    //Create Customer if CRM Contact has create customer in BC for data migration
+    procedure createCustomerFromNAVContact(var Contact: Record Contact; templateCode: code[10])
     var
         CRMContact: Record "CRM Contact";
         NAVContact: Record Contact;
@@ -155,10 +184,10 @@ codeunit 60001 "IOSH_Customer Management"
 
     end;
 
-    procedure InsertNewContact(VAR Cust: Record Customer; pCompanyName: code[30])
+    procedure InsertNewContact(VAR Cust: Record Customer; Var Cont: Record Contact; pCompanyName: code[30])
     var
         RMSetup: Record "Marketing Setup";
-        Cont: Record Contact;
+        //Cont: Record Contact;
         ContBusRel: Record "Contact Business Relation";
     begin
         RMSetup.ChangeCompany(pCompanyName);

@@ -1,7 +1,7 @@
 {
-  "id": "2db6b316-9c43-4f66-80ae-08525761658a",
-  "name": "IOSH Integration Extension",
-  "publisher": "Tisski Ltd",
+  "id": "2db6b316-9c43-4f66-80ae-08525761658b",
+  "name": "IOSH Custom Integration Extension",
+  "publisher": "Tisski Ltd.",
   "brief": "",
   "description": "Dynamics 365 custom integration",
   "version": "1.0.0.0",

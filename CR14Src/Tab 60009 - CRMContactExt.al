@@ -1553,13 +1553,20 @@ table 60009 "IOSH_CRMContact"
             OptionOrdinalValues = 217190000, 217190001, 217190002;
             OptionMembers = UK,EU,ROW;
         }
-        field(50001; "Create Customer in BC"; Boolean)
+        field(50001; "Create Charity Customer"; Boolean)
         {
-            Caption = 'Create Customer in BC';
+            Caption = 'Create Charity Customer in BC';
             ExternalType = 'Boolean';
-            ExternalName = 'iosh_createcustomerinbc';
+            ExternalName = 'iosh_datamigrationcharitycustomer';
 
         }
+        field(50002; "Create Contact in BC"; Boolean)
+        {
+            Caption = 'Create contact in BC';
+            ExternalType = 'Boolean';
+            ExternalName = 'iosh_createcontactinbc';
+        }
+
     }
 
     keys

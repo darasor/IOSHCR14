@@ -20,17 +20,29 @@ tableextension 60011 SalesSetupExt extends "Sales & Receivables Setup" //MyTarge
             Description = 'Template use to create customer outside UK and EU.';
             TableRelation = "Customer Template".Code;
         }
-        field(50003; "CRMCharityLegalEntityName"; Code[10])
+        field(50003; "CharityLegalEntityName"; Text[30])
+        {
+            Caption = 'Charity Legal Entity Name';
+            Description = 'Charity Legal Entity Name use in Business Central.';
+            TableRelation = Company.Name;
+        }
+        field(50004; "ServiceLegalEntityName"; Text[30])
+        {
+            Caption = 'Services Legal Entity Name';
+            Description = 'Service Legal Entity Name use in Business Central.';
+            TableRelation = Company.Name;
+        }
+        field(50005; "CRMCharityLegalEntityName"; Text[30])
         {
             Caption = 'CRM Charity Legal Entity Name';
             Description = 'Legal Entity Name use in CRM Sales order for IOSH Charity.';
-            TableRelation = "Customer Template".Code;
+            TableRelation = Company.Name;
         }
-        field(50004; "CRMServiceLegalEntityName"; Code[10])
+        field(50006; "CRMServiceLegalEntityName"; Text[30])
         {
             Caption = 'CRM Services Legal Entity Name';
             Description = 'Legal Entity Name use in CRM Sales order for IOSH Services Ltd.';
-            TableRelation = "Customer Template".Code;
+            TableRelation = Company.Name;
         }
 
 

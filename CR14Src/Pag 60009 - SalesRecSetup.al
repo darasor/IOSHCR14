@@ -4,7 +4,7 @@ pageextension 60009 IOSH_SalesRecSetupExt extends "Sales & Receivables Setup" //
     {
         addafter(General)
         {
-            group("Customer Template")
+            group("IOSH Setup")
             {
                 field("UK Customer Template"; "UK Customer Template Code")
                 {
@@ -18,11 +18,11 @@ pageextension 60009 IOSH_SalesRecSetupExt extends "Sales & Receivables Setup" //
                 {
                     ApplicationArea = all;
                 }
-                field("CRM Charity Legal Entity Name"; CRMCharityLegalEntityName)
+                field("Charity Legal Entity Name"; CharityLegalEntityName)
                 {
                     ApplicationArea = all;
                 }
-                field("CRM Services Legal Entity Name"; CRMServiceLegalEntityName)
+                field("Services Legal Entity Name"; ServiceLegalEntityName)
                 {
                     ApplicationArea = all;
                 }
