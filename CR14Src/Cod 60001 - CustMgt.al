@@ -189,6 +189,7 @@ codeunit 60001 "IOSH_Customer Management"
         RMSetup: Record "Marketing Setup";
         //Cont: Record Contact;
         ContBusRel: Record "Contact Business Relation";
+
     begin
         RMSetup.ChangeCompany(pCompanyName);
         RMSetup.GET;
@@ -204,7 +205,7 @@ codeunit 60001 "IOSH_Customer Management"
             "No." := '';
             "No. Series" := '';
             RMSetup.TESTFIELD("Contact Nos.");
-            InitSeries(RMSetup."Contact Nos.", '', 0D, "No.", "No. Series", pCompanyName);
+            TisFunc.InitSeries(RMSetup."Contact Nos.", '', 0D, "No.", "No. Series", pCompanyName);
             Type := Type::Company;
             TypeChange;
             SetSkipDefault;
@@ -222,30 +223,7 @@ codeunit 60001 "IOSH_Customer Management"
         END;
     end;
 
-    procedure InitSeries(DefaultNoSeriesCode: Code[20]; OldNoSeriesCode: Code[20]; NewDate: Date; VAR NewNo: Code[20];
-    VAR NewNoSeriesCode: Code[20]; pCompanyName: code[30])
-    var
-        NoSerieMgt: Codeunit NoSeriesManagement;
-    begin
-        NoSeries.ChangeCompany(pCompanyName);
-        IF NewNo = '' THEN BEGIN
-            NoSeries.GET(DefaultNoSeriesCode);
-            IF NOT NoSeries."Default Nos." THEN
-                ERROR(
-                Text002 +
-                Text003,
-                NoSeries.FIELDCAPTION("Default Nos."), NoSeries.TABLECAPTION, NoSeries.Code);
-            /* IF OldNoSeriesCode <> '' THEN BEGIN
-                NoSeriesCode := DefaultNoSeriesCode;
-                FilterSeries;
-                NoSeries.Code := OldNoSeriesCode;
-                IF NOT NoSeries.FIND THEN
-                NoSeries.GET(DefaultNoSeriesCode);
-            END; */
-            NewNo := NoSerieMgt.GetNextNo(NoSeries.Code, NewDate, TRUE);
-            NewNoSeriesCode := NoSeries.Code;
-        END;
-    end;
+    
 
     procedure CreateCustomer(var Cust: Record Customer; NAVContact: Record Contact; pCompany: code[30])
     var
@@ -328,12 +306,9 @@ codeunit 60001 "IOSH_Customer Management"
         CustomerRecRef: RecordRef;
 
         DimensionsTemplate: Record "Dimensions Template";
-        Text002: Label 'It is not possible to assign numbers automatically.';
-        Text003: label 'If you want the program to assign numbers automatically, please activate %1 in %2 %3.';
-        NoSeries: Record "No. Series";
 
         TisCRMIntegMgt: Codeunit TIS_CRMIntegrationMgt;
 
-
+        TisFunc: Codeunit TISFunctions;
 
 }
