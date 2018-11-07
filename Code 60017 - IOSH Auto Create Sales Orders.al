@@ -19,8 +19,10 @@ codeunit 60017 IOSH_Auto_CreateSalesOrders
     IF CRMSalesorder.FINDSET(TRUE) THEN
     REPEAT
         if IOSH_CRMSalesOrder.get(CRMSalesorder.SalesOrderId) then
-        IF CODEUNIT.RUN(CODEUNIT::iOSH_CRMSalesOrderToSalesOrder,IOSH_CRMSalesOrder) THEN
-        COMMIT;
+        //for specific company
+        if IOSH_CRMSalesOrder.IOSH_LegalEntityName = CompanyName() then 
+            IF CODEUNIT.RUN(CODEUNIT::iOSH_CRMSalesOrderToSalesOrder,IOSH_CRMSalesOrder) THEN
+                COMMIT;
     UNTIL CRMSalesorder.NEXT = 0;
     end;
     var
