@@ -2,8 +2,8 @@ report 60000 "IOSH_Standard Statement"
 {
     // version NAVW113.00
 
-    RDLCLayout = 'CR14Src\Layout\IOSH_Statement.rdl';
-    //WordLayout = 'Layout\Standard Statement.docx';
+    RDLCLayout = 'CR14Src/layout/IOSH_Statement.rdl';
+    WordLayout = 'CR14Src/layout/Standard Statement.docx';
     Caption = 'Standard Statement';
     DefaultLayout = Word;
     UsageCategory = ReportsAndAnalysis;
@@ -275,6 +275,10 @@ report 60000 "IOSH_Standard Statement"
                                             Description := CustLedgerEntry.Description;
                                             DueDate := CustLedgerEntry."Due Date";
                                             CustLedgerEntry.SETRANGE("Date Filter", 0D, EndDate);
+                                            if DocNo <> '' then
+                                                CustledgerEntry.SetRange("Document No.", DocNo);
+                                            if ExtDocNo <> '' then
+                                                CustLedgerEntry.SetRange("External Document No.", ExtDocNo);
                                             CustLedgerEntry.CALCFIELDS("Remaining Amount");
                                             RemainingAmount := CustLedgerEntry."Remaining Amount";
                                             CustLedgerEntry.SETRANGE("Date Filter");
@@ -328,7 +332,10 @@ report 60000 "IOSH_Standard Statement"
                                 SETRANGE("Customer No.", Customer."No.");
                                 SETRANGE("Posting Date", StartDate, EndDate);
                                 SETRANGE("Currency Code", TempCurrency2.Code);
-
+                                if DocNo <> '' then
+                                    SETRANGE(DtldCustLedgEntries."Document No.", DocNo); //TIS01
+                                if ExtDocNo <> '' then
+                                    Setrange(DtldCustLedgEntries."Document No.", ExtDocNo);//TIS01
                                 IF TempCurrency2.Code = '' THEN BEGIN
                                     GLSetup.TESTFIELD("LCY Code");
                                     CurrencyCode3 := GLSetup."LCY Code"
@@ -437,6 +444,10 @@ report 60000 "IOSH_Standard Statement"
                                         CurrReport.SKIP;
                                 CustLedgEntry := CustLedgEntry2;
                                 CustLedgEntry.SETRANGE("Date Filter", 0D, EndDate);
+                                if DocNo <> '' then
+                                    CustledgerEntry.SetRange("Document No.", DocNo);
+                                if ExtDocNo <> '' then
+                                    CustLedgerEntry.SetRange("External Document No.", ExtDocNo);
                                 CustLedgEntry.CALCFIELDS("Remaining Amount");
                                 "Remaining Amount" := CustLedgEntry."Remaining Amount";
                                 IF CustLedgEntry."Remaining Amount" = 0 THEN
@@ -487,7 +498,12 @@ report 60000 "IOSH_Standard Statement"
                             CustLedgerEntry.SETCURRENTKEY("Customer No.", "Posting Date", "Currency Code");
                             CustLedgerEntry.SETRANGE("Customer No.", Customer."No.");
                             CustLedgerEntry.SETRANGE("Posting Date", 0D, EndDate);
+                            if DocNo <> '' then
+                                CustledgerEntry.SetRange("Document No.", DocNo);
+                            if ExtDocNo <> '' then
+                                CustLedgerEntry.SetRange("External Document No.", ExtDocNo);
                             CustLedgerEntry.SETRANGE("Currency Code", TempCurrency2.Code);
+
                             EntriesExists := NOT CustLedgerEntry.ISEMPTY;
                         UNTIL EntriesExists;
                         Cust2 := Customer;
@@ -525,6 +541,10 @@ report 60000 "IOSH_Standard Statement"
                                     CurrReport.SKIP;
                             CustLedgEntry := AgingCustLedgEntry;
                             CustLedgEntry.SETRANGE("Date Filter", 0D, EndDate);
+                            if DocNo <> '' then
+                                CustledgerEntry.SetRange("Document No.", DocNo);
+                            if ExtDocNo <> '' then
+                                CustLedgerEntry.SetRange("External Document No.", ExtDocNo);
                             CustLedgEntry.CALCFIELDS("Remaining Amount");
                             "Remaining Amount" := CustLedgEntry."Remaining Amount";
                             IF CustLedgEntry."Remaining Amount" = 0 THEN
@@ -540,6 +560,10 @@ report 60000 "IOSH_Standard Statement"
                             SETCURRENTKEY("Customer No.", "Posting Date", "Currency Code");
                             SETRANGE("Customer No.", Customer."No.");
                             SETRANGE("Posting Date", 0D, EndDate);
+                            if DocNo <> '' then
+                                CustledgerEntry.SetRange("Document No.", DocNo);
+                            if ExtDocNo <> '' then
+                                CustLedgerEntry.SetRange("External Document No.", ExtDocNo);
                         end;
                     }
                     dataitem(AgingBandLoop; integer)
@@ -674,6 +698,10 @@ report 60000 "IOSH_Standard Statement"
                     CustLedgerEntry.SETCURRENTKEY("Customer No.", "Posting Date");
                     CustLedgerEntry.SETRANGE("Customer No.", "No.");
                     CustLedgerEntry.SETRANGE("Posting Date", StartDate, EndDate);
+                    if DocNo <> '' then
+                        CustledgerEntry.SetRange("Document No.", DocNo);
+                    if ExtDocNo <> '' then
+                        CustLedgerEntry.SetRange("External Document No.", ExtDocNo);
                     COPYFILTER("Currency Filter", CustLedgerEntry."Currency Code");
                     PrintLine := NOT CustLedgerEntry.ISEMPTY;
                 END;
