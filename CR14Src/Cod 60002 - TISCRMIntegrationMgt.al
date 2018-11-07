@@ -8,12 +8,12 @@ codeunit 60002 TIS_CRMIntegrationMgt
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Integration Management", 'OnIsIntegrationRecord', '', true, true)]
     local procedure CheckCustomIntTables(TableID: Integer; VAR isIntegrationRecord: Boolean)
     begin
-        case TableID of
-            database::Job:
-                isIntegrationRecord := true;
-            Database::"Job Journal Line":
-                isIntegrationRecord := true;
-        end;
+        // case TableID of
+        //     database::Job:
+        //         isIntegrationRecord := true;
+        //     Database::"Job Journal Line":
+        //         isIntegrationRecord := true;
+        // end;
     end;
 
     [EventSubscriber(ObjectType::Codeunit, 5340, 'OnQueryPostFilterIgnoreRecord', '', true, true)]
@@ -23,12 +23,14 @@ codeunit 60002 TIS_CRMIntegrationMgt
         SynchActionType: Option "None",Insert,Modify,ForceModify,IgnoreUnchanged,Fail,Skip;
         Cust: Record Customer;
         CRMAccount: Record "CRM Account";
+        Contact: Record Contact;
         IOSH_CRMContact: Record IOSH_CRMContact;
         SalesSetup: Record "Sales & Receivables Setup";
     begin
 
         if (SourceRecordRef.Number() = Database::Customer) then begin
             SourceRecordRef.SetTable(Cust);
+            //Customer 
             if cust."Dynamics 365 Contact Customer" then
                 IgnoreRecord := true;
         end;
@@ -38,11 +40,16 @@ codeunit 60002 TIS_CRMIntegrationMgt
             SourceRecordRef.settable(CRMAccount);
             if IOSH_CRMContact.get(CRMAccount.AccountId) then
                 if Not (IOSH_CRMContact."Create Charity Customer" and (CompanyName() = SalesSetup.CharityLegalEntityName)) then
-                    IgnoreRecord := true;
+                    //if they havent created yet then ignore,otherwise allow to update
+                    if NOT IntegrationRecord.FindByIntegrationId(CRMAccount.AccountId) then
+                        IgnoreRecord := true
         end;
-
-
-
+        if (SourceRecordRef.Number() = Database::Contact) then begin
+            SourceRecordRef.settable(Contact);
+            //if they havent created yet then ignore,otherwise allow to update
+            if NOT IntegrationRecord.FindByRecordId(Contact.RecordId()) then
+                IgnoreRecord := true
+        end;
     end;
 
     [EventSubscriber(ObjectType::Codeunit, 5345, 'OnAfterInsertRecord', '', true, true)]

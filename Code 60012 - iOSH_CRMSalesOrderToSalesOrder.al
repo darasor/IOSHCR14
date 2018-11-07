@@ -6,12 +6,18 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
     trigger OnRun();
     var
         SalesHeader: Record 36;
+        SalesPost: Codeunit "Sales-Post";
     begin
         CreateInNAV(Rec, SalesHeader);
+        //AutoPost
+        SalesHeader.Invoice := true;
+        SalesHeader.Ship := true;
+        SalesHeader.Modify();
+        if not CODEUNIT.RUN(CODEUNIT::"Sales-Post", SalesHeader) then
+            Message('Error duing post sales order was %1', GetLastErrorText());
     end;
 
     var
-        IOSH_IntgMgt: Codeunit TIS_CRMIntegrationMgt;
         CustMgt: Codeunit "IOSH_Customer Management";
         CannotCreateSalesOrderInNAVTxt: TextConst ENU = 'The sales order cannot be created.', ENG = 'The sales order cannot be created.';
         CannotFindCRMAccountForOrderErr: TextConst Comment = '%1=Dynamics CRM Sales Order Name, %2 - Microsoft Dynamics CRM', ENU = 'The %2 account for %2 sales order %1 does not exist.', ENG = 'The %2 account for %2 sales order %1 does not exist.';
@@ -153,18 +159,9 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
     local procedure CreateNAVSalesOrder(CRMSalesorder: Record 60007; var SalesHeader: Record 36): Boolean;
     var
         CRMIntegrationRecord: Record 5331;
-        SalesRecSetup: Record "Sales & Receivables Setup";
-        CompanyLegalName: text[30];
     begin
         IF ISNULLGUID(CRMSalesorder.SalesOrderId) THEN
             EXIT;
-        //Company name
-        SalesRecSetup.get;
-
-        if CRMSalesorder.IOSH_LegalEntityName = SalesRecSetup.CharityLegalEntityName then
-            CompanyLegalName := SalesRecSetup.CharityLegalEntityName
-        else
-            CompanyLegalName := SalesRecSetup.ServiceLegalEntityName;
 
         CreateSalesOrderHeader(CRMSalesorder, SalesHeader);
         CreateSalesOrderLines(CRMSalesorder, SalesHeader);
@@ -198,7 +195,6 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
         SalesHeader.VALIDATE("Document Type", SalesHeader."Document Type"::Order);
         SalesHeader.VALIDATE(Status, SalesHeader.Status::Open);
         SalesHeader.InitInsert;
-        //Check customer and contact here
         GetCoupledCustomer(CRMSalesorder, Customer);
         SalesHeader.VALIDATE("Sell-to Customer No.", Customer."No.");
         SalesHeader.Validate("Paid Online", CRMSalesorder.iosh_OnlinePayment);
@@ -295,7 +291,6 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
         NAVCustomerRecordId: RecordID;
         CRMAccountId: Guid;
         CRMContact: Record "CRM Contact";
-
     begin
         IF ISNULLGUID(CRMSalesorder.CustomerId) THEN
             ERROR(NoCustomerErr, CannotCreateSalesOrderInNAVTxt, CRMSalesorder.Description, CRMProductName.SHORT);
@@ -310,8 +305,7 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
 
         IF GetCRMAccountOfCRMSalesOrder(CRMSalesorder, CRMAccount) THEN begin
             CRMAccountId := CRMAccount.AccountId;
-            IF NOT IOSH_IntgMgt.FindRecordIDFromID(CRMAccountId, DATABASE::Customer, NAVCustomerRecordId,
-                CRMSalesorder.IOSH_LegalEntityName) THEN begin
+            IF NOT CRMIntegrationRecord.FindRecordIDFromID(CRMAccountId, DATABASE::Customer, NAVCustomerRecordId) THEN begin
                 //instead of error, create customer
                 CustMgt.createCustomerUseCRMAccount(CRMAccountId, Customer, CRMSalesorder.IOSH_LegalEntityName);
                 exit(true);
@@ -321,7 +315,6 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
 
             if GetCRMContactOfCRMSalesOrder(CRMSalesorder, CRMContact) then begin
                 CustMgt.createCustomerUseCRMContact(CRMContact.AccountId, Customer, CRMSalesorder.IOSH_LegalEntityName);
-
                 exit(true);
             end else
                 if GetCRMAccount_Only_OfCRMSalesOrder(CRMSalesorder, CRMAccount) then begin
@@ -331,8 +324,6 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
                     ERROR(NotCoupledCustomerErr, CannotCreateSalesOrderInNAVTxt, CRMAccount.Name, CRMProductName.SHORT);
         end;
         exit(false);
-
-
     end;
 
     [Scope('Personalization')]

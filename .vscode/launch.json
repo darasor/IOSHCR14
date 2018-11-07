@@ -7,6 +7,7 @@
             "name": "Microsoft cloud sandbox",
             "startupObjectId": 22,
             "startupObjectType": "Page",
+            "schemaUpdateMode": "Recreate",
         }
     ]
 }
