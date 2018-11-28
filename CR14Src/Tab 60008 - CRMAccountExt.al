@@ -756,6 +756,7 @@ table 60008 "IOSH_CRMAccount"
             Description = 'Type the city for the secondary address.';
             ExternalName = 'address2_city';
             ExternalType = 'String';
+            DataClassification = CustomerContent;
         }
         field(92; Address2_StateOrProvince; Text[50])
         {
@@ -763,6 +764,7 @@ table 60008 "IOSH_CRMAccount"
             Description = 'Type the state or province of the secondary address.';
             ExternalName = 'address2_stateorprovince';
             ExternalType = 'String';
+            DataClassification = CustomerContent;
         }
         field(93; Address2_County; Text[50])
         {
@@ -770,6 +772,7 @@ table 60008 "IOSH_CRMAccount"
             Description = 'Type the county for the secondary address.';
             ExternalName = 'address2_county';
             ExternalType = 'String';
+            DataClassification = CustomerContent;
         }
         field(94; Address2_Country; Text[80])
         {
@@ -777,6 +780,7 @@ table 60008 "IOSH_CRMAccount"
             Description = 'Type the country or region for the secondary address.';
             ExternalName = 'address2_country';
             ExternalType = 'String';
+            DataClassification = CustomerContent;
         }
         field(95; Address2_PostOfficeBox; Text[20])
         {
@@ -784,6 +788,7 @@ table 60008 "IOSH_CRMAccount"
             Description = 'Type the post office box number of the secondary address.';
             ExternalName = 'address2_postofficebox';
             ExternalType = 'String';
+            DataClassification = CustomerContent;
         }
         field(96; Address2_PostalCode; Text[20])
         {
@@ -791,6 +796,7 @@ table 60008 "IOSH_CRMAccount"
             Description = 'Type the ZIP Code or postal code for the secondary address.';
             ExternalName = 'address2_postalcode';
             ExternalType = 'String';
+            DataClassification = CustomerContent;
         }
         field(97; Address2_UTCOffset; Integer)
         {
@@ -800,6 +806,7 @@ table 60008 "IOSH_CRMAccount"
             ExternalType = 'Integer';
             MaxValue = 1500;
             MinValue = - 1500;
+            DataClassification = CustomerContent;
         }
         field(98; Address2_FreightTermsCode; Option)
         {
@@ -811,6 +818,7 @@ table 60008 "IOSH_CRMAccount"
             OptionCaption = 'Default Value';
             OptionOrdinalValues = 1;
             OptionMembers = DefaultValue;
+            DataClassification = AccountData;
         }
         field(99; Address2_UPSZone; Text[4])
         {

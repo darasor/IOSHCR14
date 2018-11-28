@@ -586,7 +586,7 @@ table 60009 "IOSH_CRMContact"
                OptionCaption = 'Active,Inactive';
                OptionOrdinalValues = 0, 1;
                OptionMembers = Active,Inactive;
-           } */
+           }  */
         field(72; Aging60; Decimal)
         {
             Caption = 'Aging 60';

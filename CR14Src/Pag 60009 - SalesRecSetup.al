@@ -22,10 +22,10 @@ pageextension 60009 IOSH_SalesRecSetupExt extends "Sales & Receivables Setup" //
                 {
                     ApplicationArea = all;
                 }
-                field("Services Legal Entity Name"; ServiceLegalEntityName)
-                {
-                    ApplicationArea = all;
-                }
+                // field("Services Legal Entity Name"; ServiceLegalEntityName)
+                // {
+                //     ApplicationArea = all;
+                // }
             }
         }
     }

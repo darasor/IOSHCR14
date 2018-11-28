@@ -9,6 +9,7 @@ table 60004 IOSH_CRM_Product
     ExternalName = 'product';
     TableType = CRM;
 
+
     fields
     {
         field(1; ProductId; Guid)
@@ -523,6 +524,7 @@ table 60004 IOSH_CRM_Product
 
     }
 
+
     keys
     {
         key(Key1; ProductId)
@@ -539,5 +541,6 @@ table 60004 IOSH_CRM_Product
         {
         }
     }
+
 }
 

@@ -1,18 +1,13 @@
-pageextension 60008 CustomerCardEx extends "Customer Card" //MyTargetPageId
+pageextension 60018 CustomerListExt extends "Customer List"
 {
     layout
     {
-        addafter("Last Date Modified")
-        {
-            field("Dynamics 365 Contact Customer"; "Dynamics 365 Contact Customer")
-            {
-                ApplicationArea = all;
-            }
-        }
+        // Add changes to page layout here
     }
 
     actions
     {
+        // Add changes to page actions here
         modify(CRMGotoAccount)
         {
             Visible = false;
@@ -25,5 +20,12 @@ pageextension 60008 CustomerCardEx extends "Customer Card" //MyTargetPageId
         {
             Visible = false;
         }
+        modify(Create)
+        {
+            Visible = false;
+        }
     }
+
+    var
+        myInt: Integer;
 }

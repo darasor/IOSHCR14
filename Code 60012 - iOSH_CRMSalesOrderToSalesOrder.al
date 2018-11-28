@@ -8,13 +8,15 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
         SalesHeader: Record 36;
         SalesPost: Codeunit "Sales-Post";
     begin
-        CreateInNAV(Rec, SalesHeader);
-        //AutoPost
-        SalesHeader.Invoice := true;
-        SalesHeader.Ship := true;
-        SalesHeader.Modify();
-        if not CODEUNIT.RUN(CODEUNIT::"Sales-Post", SalesHeader) then
-            Message('Error duing post sales order was %1', GetLastErrorText());
+        if CompanyName() = Rec.IOSH_LegalEntityName then
+            if CreateInNAV(Rec, SalesHeader) then begin
+                //AutoPost
+                SalesHeader.Invoice := true;
+                SalesHeader.Ship := true;
+                SalesHeader.Modify();
+                if not CODEUNIT.RUN(CODEUNIT::"Sales-Post", SalesHeader) then
+                    Message('Error during post sales order was %1', GetLastErrorText());
+            end;
     end;
 
     var
@@ -307,18 +309,21 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
             CRMAccountId := CRMAccount.AccountId;
             IF NOT CRMIntegrationRecord.FindRecordIDFromID(CRMAccountId, DATABASE::Customer, NAVCustomerRecordId) THEN begin
                 //instead of error, create customer
-                CustMgt.createCustomerUseCRMAccount(CRMAccountId, Customer, CRMSalesorder.IOSH_LegalEntityName);
+                CustMgt.createCustomerUseCRMAccount(CRMAccountId, Customer);
                 exit(true);
             end;
             EXIT(Customer.GET(NAVCustomerRecordId));
         end else begin
 
             if GetCRMContactOfCRMSalesOrder(CRMSalesorder, CRMContact) then begin
-                CustMgt.createCustomerUseCRMContact(CRMContact.AccountId, Customer, CRMSalesorder.IOSH_LegalEntityName);
+                //CustMgt.createCustomerUseCRMContact(CRMContact.AccountId, Customer, CRMSalesorder.IOSH_LegalEntityName);
+                CustMgt.createCustomerUseCRMContact(CRMContact.AccountId, Customer);
                 exit(true);
             end else
                 if GetCRMAccount_Only_OfCRMSalesOrder(CRMSalesorder, CRMAccount) then begin
-                    CustMgt.createCustomerUseCRMAccount(CRMAccount.AccountId, Customer, CRMSalesorder.IOSH_LegalEntityName);
+                    //CustMgt.createCustomerUseCRMAccount(CRMAccount.AccountId, Customer, CRMSalesorder.IOSH_LegalEntityName);
+                    CustMgt.createCustomerUseCRMAccount(CRMAccount.AccountId, Customer);
+
                     exit(true);
                 end else
                     ERROR(NotCoupledCustomerErr, CannotCreateSalesOrderInNAVTxt, CRMAccount.Name, CRMProductName.SHORT);
