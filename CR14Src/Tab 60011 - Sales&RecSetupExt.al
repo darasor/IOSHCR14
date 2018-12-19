@@ -49,8 +49,6 @@ tableextension 60011 SalesSetupExt extends "Sales & Receivables Setup" //MyTarge
         //     TableRelation = Company.Name;
         //     DataClassification = OrganizationIdentifiableInformation;
         // }
-
-
     }
 
 }

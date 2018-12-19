@@ -87,7 +87,19 @@ codeunit 60002 TIS_CRMIntegrationMgt
         Contact: Record Contact;
         IOSH_CRMContact: Record IOSH_CRMContact;
         SalesSetup: Record "Sales & Receivables Setup";
+        Item: record item;
+        CRMProduct: Record "CRM Product";
+        IOSH_CRMProduct: Record IOSH_CRM_Product;
     begin
+        //Uncommmeted late
+
+        if (SourceRecordRef.NUMBER = DATABASE::"CRM Product") then begin
+            //SourceRecordRef.SETTABLE(CRMProduct);
+            //if IOSH_CRMProduct.get(CRMProduct.ProductId) then
+            //    if NOT (CompanyName() = IOSH_CRMProduct.IOSH_LegalEntityName) then
+            IgnoreRecord := true;
+        end;
+        //Probably need the above code for IOSH_CRM_Product
 
         // if (SourceRecordRef.Number() = Database::Customer) then begin
         //     SourceRecordRef.SetTable(Cust);
@@ -124,9 +136,56 @@ codeunit 60002 TIS_CRMIntegrationMgt
     begin
         // update CRM legal entity name,
         if IOSH_CRMProduct.get(Rec.ProductId) then begin
-            IOSH_CRMProduct.IOSH_LegalEntityName := CompanyName();
-            IOSH_CRMProduct.MODIFY(false);
+            if IOSH_CRMProduct.IOSH_LegalEntityName = '' then begin //
+                IOSH_CRMProduct.IOSH_LegalEntityName := CompanyName();
+                IOSH_CRMProduct.MODIFY(false);
+            end;
         end;
+    end;
+
+    [EventSubscriber(ObjectType::table, 27, 'OnAfterModifyEvent', '', true, true)]
+    procedure afterModifyItem(var Rec: Record Item; RunTrigger: Boolean);
+    var
+        IOSH_CRMProduct: Record IOSH_CRM_Product;
+        IntegrationRecord: Record "Integration Record";
+        CRMIntegration: Record "CRM Integration Record";
+        CRMID: Guid;
+        CRMUOMSchedule: Record "CRM Uomschedule";
+    begin
+        // update CRM Product when Item is updated 
+        // if CRMIntegration.FindIDFromRecordID(Rec.RecordId(), CRMID) then begin
+        //     if IOSH_CRMProduct.get(CRMID) then begin
+        //         IOSH_CRMProduct.Name := Rec.Description;
+        //         IOSH_CRMProduct.Price := Rec."Unit Price";
+        //         IOSH_CRMProduct.StandardCost := Rec."Unit Cost";
+        //         IOSH_CRMProduct.CurrentCost := Rec."Unit Cost";
+        //         IOSH_CRMProduct.StockVolume := Rec."Unit Volume";
+        //         IOSH_CRMProduct.StockWeight := Rec."Gross Weight";
+        //         IOSH_CRMProduct.QuantityOnHand := Rec.Inventory;
+        //         IOSH_CRMProduct.VendorID := Rec."Vendor No.";
+        //         IOSH_CRMProduct.VendorName := Rec."Vendor Item No.";
+        //         CRMUOMSchedule.SetRange(BaseUoMName, Rec."Base Unit of Measure");
+        //         if CRMUOMSchedule.FindFirst() then
+        //             IOSH_CRMProduct.DefaultUoMScheduleId := CRMUOMSchedule.UoMScheduleId;
+        //         IOSH_CRMProduct.Modify();
+        //     end;
+
+        // end;
+
+    end;
+
+    [EventSubscriber(ObjectType::table, 27, 'OnbeforeInsertEvent', '', true, true)]
+    procedure beforeInsertItem(var Rec: Record Item; RunTrigger: Boolean);
+    var
+        IOSH_CRMProduct: Record IOSH_CRM_Product;
+        IntegrationRecord: Record "Integration Record";
+        CRMIntegration: Record "CRM Integration Record";
+        CRMID: Guid;
+        CRMUOMSchedule: Record "CRM Uomschedule";
+    begin
+        // if Rec."Legal Entity Name" <> '' then
+        //     if (Rec."Legal Entity Name" <> CompanyName()) then
+        //         error('Error DS %1 CompanyName: %2', Rec."Legal Entity Name", CompanyName());
     end;
 
     [EventSubscriber(ObjectType::Codeunit, 5345, 'OnAfterInsertRecord', '', true, true)]
@@ -153,52 +212,77 @@ codeunit 60002 TIS_CRMIntegrationMgt
         //     end;
         // end;
 
-        //create customer after contact is inserted
-        //Move this as job queue instead
-        // if (SourceRecordRef.Number() = Database::"CRM Contact") and (DestinationRecordRef.Number() = Database::Contact) then begin
-        //     SourceRecordRef.SetTable(CRMContact);
-        //     DestinationRecordRef.SetTable(Contact);
-        //     if IOSH_CRMContact.get(CRMContact.ContactId) then
-        //         if IOSH_CRMContact."Create Charity Customer" then begin
-        //             if CustTemplate.get(IOSH_CRMContact."BC Template Code") then
-        //                 CustMgt.createCustomerFromNAVContact(Contact, CustTemplate.Code);
-        //         end;
-        // end;
     end;
 
-    // procedure FindRecordIDFromID(SourceCRMID: GUID; DestinationTableID: Integer; VAR DestinationRecordId: RecordID; pCompanyName: code[30]): Boolean
-    // var
-    //     CRMIntegrationRecord: Record "CRM Integration Record";
-    // begin
-    //     IF FindRowFromCRMID(SourceCRMID, DestinationTableID, CRMIntegrationRecord, pCompanyName) THEN
-    //         IF FindByIntegrationId(CRMIntegrationRecord."Integration ID", IntegrationRecord, pCompanyName) THEN BEGIN
-    //             DestinationRecordId := IntegrationRecord."Record ID";
-    //             EXIT(TRUE);
-    //         END;
-    // end;
+    procedure FindRecordIDFromID(SourceCRMID: GUID; DestinationTableID: Integer; VAR DestinationRecordId: RecordID): Boolean
+    var
+        CRMIntegrationRecord: Record "CRM Integration Record";
+    begin
+        IF FindRowFromCRMID(SourceCRMID, DestinationTableID, CRMIntegrationRecord) THEN
+            IF FindByIntegrationId(CRMIntegrationRecord."Integration ID", IntegrationRecord) THEN BEGIN
+                DestinationRecordId := IntegrationRecord."Record ID";
+                EXIT(TRUE);
+            END;
+    end;
 
-    // procedure FindRowFromCRMID(CRMID: GUID; DestinationTableID: Integer; VAR CRMIntegrationRecord: Record "CRM Integration Record";
-    // pCompanyName: code[30]): Boolean
-    // var
-    // begin
-    //     CRMIntegrationRecord.ChangeCompany(pCompanyName);
-    //     CRMIntegrationRecord.SETRANGE("CRM ID", CRMID);
-    //     CRMIntegrationRecord.SETFILTER("Table ID", FORMAT(DestinationTableID));
-    //     EXIT(CRMIntegrationRecord.FINDFIRST);
-    // end;
+    procedure FindRowFromCRMID(CRMID: GUID; DestinationTableID: Integer; VAR CRMIntegrationRecord: Record "CRM Integration Record"): Boolean
+    var
+    begin
 
-    // procedure FindByIntegrationId(IntegrationId: GUID; Var IntegrationRecord: Record "Integration Record";
-    // pCompanyName: code[30]): Boolean
-    // var
+        CRMIntegrationRecord.SETRANGE("CRM ID", CRMID);
+        CRMIntegrationRecord.SETFILTER("Table ID", FORMAT(DestinationTableID));
+        EXIT(CRMIntegrationRecord.FINDFIRST);
+    end;
 
-    // begin
-    //     IF ISNULLGUID(IntegrationId) THEN
-    //         EXIT(FALSE);
-    //     IntegrationRecord.ChangeCompany(pCompanyName);
-    //     IntegrationRecord.RESET;
-    //     IntegrationRecord.SETRANGE("Integration ID", IntegrationId);
-    //     EXIT(IntegrationRecord.FINDFIRST);
-    // end;
+    procedure FindByIntegrationId(IntegrationId: GUID; Var IntegrationRecord: Record "Integration Record"): Boolean
+    var
+    begin
+        IF ISNULLGUID(IntegrationId) THEN
+            EXIT(FALSE);
+
+        IntegrationRecord.RESET;
+        IntegrationRecord.SETRANGE("Integration ID", IntegrationId);
+        EXIT(IntegrationRecord.FINDFIRST);
+    end;
+
+    LOCAL procedure UncoupleCRMIDIfRecordDeleted(IntegrationID: GUID): Boolean
+    var
+        CRMIntegrationRecord: Record "CRM Integration Record";
+    begin
+        IntegrationRecord.FindByIntegrationId(IntegrationID);
+        //IF IntegrationRecord."Deleted On" <> 0DT THEN BEGIN
+        IF FindRowFromIntegrationID(IntegrationID, CRMIntegrationRecord) THEN
+            CRMIntegrationRecord.DELETE;
+        EXIT(TRUE);
+        //END;
+    end;
+
+    procedure DeleteIfRecordDeleted(CRMID: GUID; DestinationTableID: Integer): Boolean
+    var
+        IntegrationID: Guid;
+    begin
+        IF FindIntegrationIDFromCRMID(CRMID, DestinationTableID, IntegrationID) THEN
+            EXIT(UncoupleCRMIDIfRecordDeleted(IntegrationID));
+    end;
+
+    procedure FindIntegrationIDFromCRMID(SourceCRMID: GUID; DestinationTableID: Integer; VAR DestinationIntegrationID: GUID): Boolean
+    var
+        CRMIntegrationRecord: Record "CRM Integration Record";
+    begin
+        IF FindRowFromCRMID(SourceCRMID, DestinationTableID, CRMIntegrationRecord) THEN BEGIN
+            DestinationIntegrationID := CRMIntegrationRecord."Integration ID";
+            EXIT(TRUE);
+        END;
+    end;
+
+    procedure FindRowFromIntegrationID(IntegrationID: GUID; VAR CRMIntegrationRecord: Record "CRM Integration Record"): Boolean
+    var
+    begin
+        CRMIntegrationRecord.SETCURRENTKEY("Integration ID");
+        CRMIntegrationRecord.SETFILTER("Integration ID", IntegrationID);
+        EXIT(CRMIntegrationRecord.FINDFIRST);
+    end;
+
     var
         IntegrationRecord: Record "Integration Record";
         CRMIntegrationMgt: Codeunit TIS_CRMIntegrationMgt;

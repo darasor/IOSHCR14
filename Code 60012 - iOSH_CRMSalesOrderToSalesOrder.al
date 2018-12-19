@@ -8,15 +8,18 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
         SalesHeader: Record 36;
         SalesPost: Codeunit "Sales-Post";
     begin
-        if CompanyName() = Rec.IOSH_LegalEntityName then
-            if CreateInNAV(Rec, SalesHeader) then begin
-                //AutoPost
-                SalesHeader.Invoice := true;
-                SalesHeader.Ship := true;
-                SalesHeader.Modify();
-                if not CODEUNIT.RUN(CODEUNIT::"Sales-Post", SalesHeader) then
-                    Message('Error during post sales order was %1', GetLastErrorText());
-            end;
+        //uncommented back
+        //if CompanyName() = Rec.IOSH_LegalEntityName then
+        if CreateInNAV(Rec, SalesHeader) then begin
+            //AutoPost
+            SalesHeader.Invoice := true;
+            SalesHeader.Ship := true;
+            SalesHeader.Modify();
+            Commit();
+            //if not CODEUNIT.RUN(CODEUNIT::"Sales-Post", SalesHeader) then
+            if not SalesPost.Run(SalesHeader) then
+                Message('Error during post sales order was %1', GetLastErrorText());
+        end;
     end;
 
     var
@@ -293,6 +296,7 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
         NAVCustomerRecordId: RecordID;
         CRMAccountId: Guid;
         CRMContact: Record "CRM Contact";
+        RecRef: RecordRef;
     begin
         IF ISNULLGUID(CRMSalesorder.CustomerId) THEN
             ERROR(NoCustomerErr, CannotCreateSalesOrderInNAVTxt, CRMSalesorder.Description, CRMProductName.SHORT);
@@ -312,12 +316,14 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
                 CustMgt.createCustomerUseCRMAccount(CRMAccountId, Customer);
                 exit(true);
             end;
+            //if NAVCustomerRecordId = '' then
+
             EXIT(Customer.GET(NAVCustomerRecordId));
         end else begin
 
             if GetCRMContactOfCRMSalesOrder(CRMSalesorder, CRMContact) then begin
                 //CustMgt.createCustomerUseCRMContact(CRMContact.AccountId, Customer, CRMSalesorder.IOSH_LegalEntityName);
-                CustMgt.createCustomerUseCRMContact(CRMContact.AccountId, Customer);
+                CustMgt.createCustomerUseCRMContact(CRMContact.ContactId, Customer);
                 exit(true);
             end else
                 if GetCRMAccount_Only_OfCRMSalesOrder(CRMSalesorder, CRMAccount) then begin

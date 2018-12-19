@@ -13,10 +13,7 @@ pageextension 60008 CustomerCardEx extends "Customer Card" //MyTargetPageId
 
     actions
     {
-        modify(CRMGotoAccount)
-        {
-            Visible = false;
-        }
+
         modify(CRMSynchronizeNow)
         {
             Visible = false;

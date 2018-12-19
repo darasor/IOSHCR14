@@ -1,15 +1,6 @@
-pageextension 60007 ItemExt extends "Item Card" //MyTargetPageId
+pageextension 60010 ItemListExt extends "Item List" //MyTargetPageId
 {
-    layout
-    {
-        addafter("Automatic Ext. Texts")
-        {
-            field("Legal Entity Name"; "Legal Entity Name")
-            {
-                ApplicationArea = all;
-            }
-        }
-    }
+
 
     actions
     {

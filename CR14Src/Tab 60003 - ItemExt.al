@@ -16,7 +16,12 @@ tableextension 60003 ItemExt extends Item //MyTargetTableId
 
     trigger OnInsert()
     begin
-        "Legal Entity Name" := CompanyName();
+        if "Legal Entity Name" <> '' then
+            Error('Item already Exists in %1', "Legal Entity Name");
+
+        if "Legal Entity Name" = '' then
+            "Legal Entity Name" := CompanyName();
+
     end;
 
 }

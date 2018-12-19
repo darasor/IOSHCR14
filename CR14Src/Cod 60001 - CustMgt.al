@@ -50,7 +50,7 @@ codeunit 60001 "IOSH_Customer Management"
             Cust."Payment Method Code" := CustTemplate."Payment Method Code";
             Cust."Prices Including VAT" := CustTemplate."Prices Including VAT";
             Cust."Shipment Method Code" := CustTemplate."Shipment Method Code";
-            Cust.MODIFY;
+            Cust.MODIFY();
 
             //DefaultDim.ChangeCompany(pCompanyName);
             //DefaultDim2.ChangeCompany(pCompanyName);
@@ -59,14 +59,14 @@ codeunit 60001 "IOSH_Customer Management"
             IF DefaultDim.FIND('-') THEN
                 REPEAT
                     CLEAR(DefaultDim2);
-                    DefaultDim2.INIT;
+                    DefaultDim2.INIT();
                     DefaultDim2.VALIDATE("Table ID", DATABASE::Customer);
                     DefaultDim2."No." := Cust."No.";
                     DefaultDim2.VALIDATE("Dimension Code", DefaultDim."Dimension Code");
                     DefaultDim2.VALIDATE("Dimension Value Code", DefaultDim."Dimension Value Code");
                     DefaultDim2."Value Posting" := DefaultDim."Value Posting";
                     DefaultDim2.INSERT(TRUE);
-                UNTIL DefaultDim.NEXT = 0;
+                UNTIL DefaultDim.NEXT() = 0;
         END;
     END;
 
@@ -101,6 +101,7 @@ codeunit 60001 "IOSH_Customer Management"
             //Transferfield
             //Customer."Primary Contact No." := CRMAccount.PrimaryContactId;
             Customer.Insert(true); //This will create contact for this account
+            //Commit(); //to get Customer No.
 
             /*  DestinationRecRef.GetTable(Customer);
              SourceRecRef.GetTable(CRMAccount);
@@ -112,8 +113,14 @@ codeunit 60001 "IOSH_Customer Management"
                 if RecRef.Number() = Database::Contact then begin
                     RecRef.SetTable(NAVContact);
                     Customer."Primary Contact No." := NAVContact."No.";
+                    Customer.Contact := NAVContact.Name;
                     Customer.Modify();
                 end;
+            end else begin
+                createNAVContact(CRMAccount.PrimaryContactId, NAVContact);
+                Customer.validate("Primary Contact No.", NAVContact."No.");
+                Customer.Contact := NAVContact.Name;
+                Customer.Modify();
             end;
             //applyCustomerTemplate(pCompanyName, CRMAccount."BC Template Code", Customer);
             applyCustomerTemplate(CRMAccount."BC Template Code", Customer);
@@ -165,30 +172,6 @@ codeunit 60001 "IOSH_Customer Management"
             if IOSH_CRMContact.get(CRMContactId) then begin
                 createNAVContact(CRMContactId, NAVContact);
                 createCustomerFromNAVContact(NAVContact, IOSH_CRMContact."BC Template Code");
-                //find integration record id
-                // Customer.init;
-                // Customer.Name := IOSH_CRMContact.FullName;
-                // Customer."Partner Type" := Customer."Partner Type"::Person;
-                // Customer.Address := IOSH_CRMContact.Address1_Line1;
-                // Customer."Address 2" := IOSH_CRMContact.Address1_Line2;
-                // Customer."Address 2" := IOSH_CRMContact.Address1_Line2;
-                // Customer."Post Code" := IOSH_CRMContact.Address1_PostalCode;
-                // Customer.City := IOSH_CRMContact.Address1_City;
-                // Customer."Country/Region Code" := IOSH_CRMContact.Address1_Country;
-                // Customer.County := IOSH_CRMContact.Address1_StateOrProvince;
-                // Customer."E-Mail" := IOSH_CRMContact.EMailAddress1;
-                // Customer."Fax No." := IOSH_CRMContact.Fax;
-                // Customer."Home Page" := IOSH_CRMContact.WebSiteURL;
-                // Customer."Phone No." := IOSH_CRMContact.Telephone1;
-                // Customer."Dynamics 365 Contact Customer" := true;
-                // Customer.insert(True); 
-
-                // //applyCustomerTemplate(pCompanyName, IOSH_CRMContact."BC Template Code", Customer);
-                // applyCustomerTemplate(IOSH_CRMContact."BC Template Code", Customer);
-
-                //Couple contact with CRM contact instead of Customer as it's not going to create account in CRM
-                //CRMIntegrationRecord.ChangeCompany((pCompanyName));
-                CRMIntegrationRecord.CoupleRecordIdToCRMID(NAVContact.RecordId(), CRMContactId);
             end else
                 Error('Cannot find CRM Contact %1', CRMContactId);
         end;

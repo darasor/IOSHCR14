@@ -12,14 +12,12 @@ codeunit 60004 ContactDataMigrationJobQueue
         SalesSetup: Record "Sales & Receivables Setup";
         CRMIntegrationRecord: Record "CRM Integration Record";
         pRecordID: RecordId;
-        RecRef: RecordRef;
-        NAVModifiedOn: DateTime;
     begin
         CODEUNIT.RUN(CODEUNIT::"CRM Integration Management");
-        COMMIT;
+        COMMIT();
         //Uncommented after testing 
 
-        SalesSetup.get;
+        SalesSetup.get();
         SalesSetup.TestField("EU Customer Template Code");
         SalesSetup.TestField("UK Customer Template Code");
         SalesSetup.TestField("ROW Customer Template Code");
@@ -29,7 +27,7 @@ codeunit 60004 ContactDataMigrationJobQueue
         IOSH_CRMContact.SetRange("Create Charity Customer", true);
 
         //IOSH_CRMContact.SetRange("Create Contact in BC", true);
-        if IOSH_CRMContact.findset then
+        if IOSH_CRMContact.findset() then
             repeat
                 if NOT CRMIntegrationRecord.FindRecordIDFromID(IOSH_CRMContact.ContactId, Database::Contact, pRecordID) then begin
                     CustMgt.createNAVContact(IOSH_CRMContact.ContactId, Contact);
@@ -44,6 +42,6 @@ codeunit 60004 ContactDataMigrationJobQueue
                     if Contact."No." <> '' then
                         CustMgt.createCustomerFromNAVContact(Contact, IOSH_CRMContact."BC Template Code");
                 end;
-            until IOSH_CRMContact.next = 0;
+            until IOSH_CRMContact.next() = 0;
     end;
 }

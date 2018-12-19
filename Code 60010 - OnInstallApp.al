@@ -53,7 +53,18 @@ codeunit 60010 OnInstallApp
             2,
             STRSUBSTNO('Update customer from CRM Account', CRMProductName.SHORT),
             FALSE);
-
+        RecreateJobQueueEntry(
+        EnqueueJobQueEntries,
+        CODEUNIT::UpdateItemJobQ,
+        2,
+        STRSUBSTNO('Update Item from CRM Product', CRMProductName.SHORT),
+        FALSE);
+        RecreateJobQueueEntry(
+            EnqueueJobQueEntries,
+            CODEUNIT::IOSH_ItemJobQ,
+            2,
+            STRSUBSTNO('Create CRM Product', CRMProductName.SHORT),
+            FALSE);
     end;
 
     procedure RecreateJobQueueEntry(EnqueueJobQueEntry: Boolean; CodeunitId: Integer; MinutesBetweenRun: Integer; EntryDescription: Text; StatusReady: Boolean);

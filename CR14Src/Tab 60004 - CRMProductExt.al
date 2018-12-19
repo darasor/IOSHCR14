@@ -234,7 +234,7 @@ table 60004 IOSH_CRM_Product
             ExternalType = 'Lookup';
             TableRelation = "CRM Systemuser".SystemUserId;
         }
-        /* field(29; StatusCode; Option)
+        field(29; StatusCode; Option)
         {
             Caption = 'Status Reason';
             Description = 'Reason for the status of the product.';
@@ -244,7 +244,7 @@ table 60004 IOSH_CRM_Product
             OptionCaption = ' ,Active,Retired,Draft,Under Revision';
             OptionOrdinalValues = - 1, 1, 2, 0, 3;
             OptionMembers = " ",Active,Retired,Draft,UnderRevision;
-        } */
+        }
         field(30; VersionNumber; BigInteger)
         {
             Caption = 'Version Number';
