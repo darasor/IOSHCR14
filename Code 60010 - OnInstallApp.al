@@ -28,19 +28,31 @@ codeunit 60010 OnInstallApp
 
         EnqueueJobQueEntries := true;
 
-        RecreateJobQueueEntry(
-            EnqueueJobQueEntries,
-            CODEUNIT::IOSH_Auto_CreateSalesOrders,
-            2,
-            STRSUBSTNO(AutoCreateSalesOrdersTxt, CRMProductName.SHORT),
-            FALSE);
+        // RecreateJobQueueEntry(
+        //     EnqueueJobQueEntries,
+        //     CODEUNIT::IOSH_Auto_CreateSalesOrders,
+        //     2,
+        //     STRSUBSTNO(AutoCreateSalesOrdersTxt, CRMProductName.SHORT),
+        //     FALSE);
 
+        // RecreateJobQueueEntry(
+        //     EnqueueJobQueEntries,
+        //     CODEUNIT::ContactDataMigrationJobQueue,
+        //     2,
+        //     STRSUBSTNO('Auto create contact for data migration from CRM', CRMProductName.SHORT),
+        //     FALSE);
         RecreateJobQueueEntry(
             EnqueueJobQueEntries,
-            CODEUNIT::ContactDataMigrationJobQueue,
+            CODEUNIT::IOSH_CreateContactSalesInvoice,
             2,
-            STRSUBSTNO('Auto create contact for data migration from CRM', CRMProductName.SHORT),
+            STRSUBSTNO('Auto create CRM Invoice for Contact', CRMProductName.SHORT),
             FALSE);
+        RecreateJobQueueEntry(
+           EnqueueJobQueEntries,
+           CODEUNIT::UpdateContactJobQ,
+           2,
+           STRSUBSTNO('Update contact from CRM Contact', CRMProductName.SHORT),
+           FALSE);
         RecreateJobQueueEntry(
             EnqueueJobQueEntries,
             CODEUNIT::UpdateContactJobQ,
@@ -83,10 +95,10 @@ codeunit 60010 OnInstallApp
             Priority := 1000;
             Description := COPYSTR(EntryDescription, 1, MAXSTRLEN(Description));
             "Maximum No. of Attempts to Run" := 2;
-            IF StatusReady THEN
-                Status := Status::Ready
-            ELSE
-                Status := Status::"On Hold";
+            // IF StatusReady THEN
+            //     Status := Status::Ready
+            // ELSE
+            Status := Status::"On Hold";
             "Rerun Delay (sec.)" := 30;
             IF EnqueueJobQueEntry THEN
                 CODEUNIT.RUN(CODEUNIT::"Job Queue - Enqueue", JobQueueEntry)

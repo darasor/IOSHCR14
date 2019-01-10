@@ -1,7 +1,6 @@
 pageextension 60010 ItemListExt extends "Item List" //MyTargetPageId
 {
 
-
     actions
     {
         addafter(CRMSynchronizeNow)

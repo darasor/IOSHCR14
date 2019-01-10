@@ -2,7 +2,6 @@ codeunit 60002 TIS_CRMIntegrationMgt
 {
     trigger OnRun()
     begin
-
     end;
 
 

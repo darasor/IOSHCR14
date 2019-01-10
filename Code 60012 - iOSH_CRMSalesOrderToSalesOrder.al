@@ -15,7 +15,7 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
             SalesHeader.Invoice := true;
             SalesHeader.Ship := true;
             SalesHeader.Modify();
-            Commit();
+            Commit(); //Need commit here otherwise it throws errors
             //if not CODEUNIT.RUN(CODEUNIT::"Sales-Post", SalesHeader) then
             if not SalesPost.Run(SalesHeader) then
                 Message('Error during post sales order was %1', GetLastErrorText());
@@ -297,6 +297,7 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
         CRMAccountId: Guid;
         CRMContact: Record "CRM Contact";
         RecRef: RecordRef;
+        Tis_CRM_Mgt: Codeunit TIS_CRMIntegrationMgt;
     begin
         IF ISNULLGUID(CRMSalesorder.CustomerId) THEN
             ERROR(NoCustomerErr, CannotCreateSalesOrderInNAVTxt, CRMSalesorder.Description, CRMProductName.SHORT);
@@ -315,9 +316,12 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
                 //instead of error, create customer
                 CustMgt.createCustomerUseCRMAccount(CRMAccountId, Customer);
                 exit(true);
-            end;
-            //if NAVCustomerRecordId = '' then
-
+            end else //In case customer is deleted
+                if NOT RecRef.get(NAVCustomerRecordId) then begin
+                    Tis_CRM_Mgt.DeleteIfRecordDeleted(CRMAccountId, Database::Customer);
+                    CustMgt.createCustomerUseCRMAccount(CRMAccountId, Customer);
+                    exit(true);
+                end;
             EXIT(Customer.GET(NAVCustomerRecordId));
         end else begin
 
@@ -329,7 +333,6 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
                 if GetCRMAccount_Only_OfCRMSalesOrder(CRMSalesorder, CRMAccount) then begin
                     //CustMgt.createCustomerUseCRMAccount(CRMAccount.AccountId, Customer, CRMSalesorder.IOSH_LegalEntityName);
                     CustMgt.createCustomerUseCRMAccount(CRMAccount.AccountId, Customer);
-
                     exit(true);
                 end else
                     ERROR(NotCoupledCustomerErr, CannotCreateSalesOrderInNAVTxt, CRMAccount.Name, CRMProductName.SHORT);

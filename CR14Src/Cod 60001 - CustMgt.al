@@ -2,7 +2,6 @@ codeunit 60001 "IOSH_Customer Management"
 {
     trigger OnRun()
     begin
-
     end;
 
     //procedure applyCustomerTemplate(pCompanyName: code[30]; TemplateCode: Option UK,EU,ROW; pCustomer: record customer)
@@ -77,31 +76,32 @@ codeunit 60001 "IOSH_Customer Management"
         CRMAccount: Record IOSH_CRMAccount;
         NAVContact: Record Contact;
         CRMIntegrationRecord: Record "CRM Integration Record";
-        DestinationRecRef: RecordRef;
-        SourceRecRef: RecordRef;
+        ContBusRel: Record "Contact Business Relation";
+        RMSetup: Record "Marketing Setup";
+        contact: Record Contact;
         RecRef: RecordRef;
         RecordID: RecordId;
     begin
 
         if CRMAccount.get(CRMAccountId) then begin
-            Customer.init;
-            Customer.Name := CRMAccount.Name;
-            Customer.Contact := CRMAccount.Address1_PrimaryContactName;
-            customer.Address := CRMAccount.Address1_Line1;
-            Customer."Address 2" := CRMAccount.Address1_Line2;
+            Customer.init();
+            Customer.validate(Name, Format(CRMAccount.Name, MaxStrLen(Customer.Name)));
+            Customer.Contact := Format(CRMAccount.Address1_PrimaryContactName, MaxStrLen(Customer.Contact));
+            Customer.address := Format(CRMAccount.Address1_Line1, MaxStrLen(Customer.Address));
+            Customer."address 2" := Format(CRMAccount.Address1_Line2, MaxStrLen(Customer."Address 2"));
             Customer."Post Code" := CRMAccount.Address1_PostalCode;
-            Customer.City := CRMAccount.Address1_City;
-            Customer."Country/Region Code" := CRMAccount.Address1_Country;
-            Customer.County := CRMAccount.Address1_StateOrProvince;
-            Customer."E-Mail" := CRMAccount.EMailAddress1;
-            Customer."Fax No." := CRMAccount.Fax;
-            Customer."Home Page" := CRMAccount.WebSiteURL;
-            Customer."Phone No." := CRMAccount.Telephone1;
+            Customer.city := Format(CRMAccount.Address1_City, MaxStrLen(Customer.city));
+            Customer."Country/Region Code" := Format(CRMAccount.Address1_Country, MaxStrLen(Customer."Country/Region Code"));
+            Customer.County := Format(CRMAccount.Address1_StateOrProvince, MaxStrLen(Customer.County));
+            Customer."E-Mail" := Format(CRMAccount.EMailAddress1, MaxStrLen(Customer."E-Mail"));
+            Customer."Fax No." := Format(CRMAccount.Fax, MaxStrLen(Customer."Fax No."));
+            Customer."Home Page" := Format(CRMAccount.WebSiteURL, MaxStrLen(Customer."Home Page"));
+            Customer."Phone No." := Format(CRMAccount.Telephone1, MaxStrLen(Customer."Phone No."));
+
             //Need to write code to convert GUID to text
-            //Transferfield
-            //Customer."Primary Contact No." := CRMAccount.PrimaryContactId;
-            Customer.Insert(true); //This will create contact for this account
-            //Commit(); //to get Customer No.
+            if not Customer.Insert(true) then
+                Error('Error during create customer was %1', GetLastErrorText()); //This will create contact for this account
+                                                                                  //Commit(); //to get Customer No.
 
             /*  DestinationRecRef.GetTable(Customer);
              SourceRecRef.GetTable(CRMAccount);
@@ -109,24 +109,19 @@ codeunit 60001 "IOSH_Customer Management"
              ParameterDestinationRecordRef := DestinationRecRef;
              TransferField(CRMAccount.FieldNo(CRMAccount.PrimaryContactId), Customer.FieldNo(Customer."Primary Contact No."), '', true); */
             if CRMIntegrationRecord.FindRecordIDFromID(CRMAccount.PrimaryContactId, Database::Contact, RecordID) then begin
-                RecRef.get(RecordID);
-                if RecRef.Number() = Database::Contact then begin
-                    RecRef.SetTable(NAVContact);
-                    Customer."Primary Contact No." := NAVContact."No.";
-                    Customer.Contact := NAVContact.Name;
-                    Customer.Modify();
-                end;
+                if Contact.get(RecordID) then
+                    Customer."Primary Contact No." := Contact."No.";
+                Customer.Contact := contact.Name;
+                Customer.Modify();
             end else begin
-                createNAVContact(CRMAccount.PrimaryContactId, NAVContact);
-                Customer.validate("Primary Contact No.", NAVContact."No.");
+                createCustomerPrimaryContact(CRMAccount.PrimaryContactId, NAVContact, Customer);
+                Customer."Primary Contact No." := NAVContact."No.";
                 Customer.Contact := NAVContact.Name;
                 Customer.Modify();
             end;
-            //applyCustomerTemplate(pCompanyName, CRMAccount."BC Template Code", Customer);
             applyCustomerTemplate(CRMAccount."BC Template Code", Customer);
 
             //Create coupling
-            //CRMIntegrationRecord.ChangeCompany(pCompanyName);
             CRMIntegrationRecord.CoupleRecordIdToCRMID(Customer.RecordId(), CRMAccountId);
         end else
             Error('Cannot find CRM Account %1', CRMAccountId);
@@ -149,9 +144,6 @@ codeunit 60001 "IOSH_Customer Management"
         //Customer.ChangeCompany(pCompanyName);
 
         if CRMIntegrationRecord.FindRecordIDFromID(CRMContactId, Database::Contact, RecordID) then begin
-            //RecRef.ChangeCompany(pCompanyName);
-            //NAVContact.ChangeCompany(pCompanyName);
-            //ContBusRel.ChangeCompany(pCompanyName);
             RecRef.get(RecordID);
             if RecRef.Number() = Database::Contact then begin
                 RecRef.SetTable(NAVContact);
@@ -159,19 +151,14 @@ codeunit 60001 "IOSH_Customer Management"
                     Customer.get(ContBusRel."No.");
                     exit;
                 end else begin
-                    //CreateCustomer(Customer, NAVContact, pCompanyName);
                     if IOSH_CRMContact.get(CRMContactId) then
-                        createCustomerFromNAVContact(NAVContact, IOSH_CRMContact."BC Template Code");
-                    //Apply template 
-                    //applyCustomerTemplate(pCompanyName, IOSH_CRMContact."BC Template Code", Customer);     
+                        createCustomerFromNAVContact(NAVContact, IOSH_CRMContact."BC Template Code", Customer);
                 end;
             end;
-
         end else begin
-
             if IOSH_CRMContact.get(CRMContactId) then begin
                 createNAVContact(CRMContactId, NAVContact);
-                createCustomerFromNAVContact(NAVContact, IOSH_CRMContact."BC Template Code");
+                createCustomerFromNAVContact(NAVContact, IOSH_CRMContact."BC Template Code", Customer);
             end else
                 Error('Cannot find CRM Contact %1', CRMContactId);
         end;
@@ -180,22 +167,31 @@ codeunit 60001 "IOSH_Customer Management"
     procedure UpdateNavCustomer(CRMAccountId: Guid; Var Customer: Record customer)
     var
         CRMAccount: Record IOSH_CRMAccount;
+        Contact: Record Contact;
+
+        RecID: RecordId;
+
     begin
         if CRMAccount.get(CRMAccountId) then begin
-            Customer.Name := CRMAccount.Name;
-            Customer.Contact := CRMAccount.Address1_PrimaryContactName;
-            customer.Address := CRMAccount.Address1_Line1;
-            Customer."Address 2" := CRMAccount.Address1_Line2;
+
+            Customer.validate(Name, Format(CRMAccount.Name, MaxStrLen(Customer.Name)));
+            Customer.validate(Name, Format(CRMAccount.Name, MaxStrLen(Customer.Name)));
+            Customer.Contact := Format(CRMAccount.Address1_PrimaryContactName, MaxStrLen(Customer.Contact));
+            Customer.address := Format(CRMAccount.Address1_Line1, MaxStrLen(Customer.Address));
+            Customer."address 2" := Format(CRMAccount.Address1_Line2, MaxStrLen(Customer."Address 2"));
             Customer."Post Code" := CRMAccount.Address1_PostalCode;
-            Customer.City := CRMAccount.Address1_City;
-            Customer."Country/Region Code" := CRMAccount.Address1_Country;
-            Customer.County := CRMAccount.Address1_StateOrProvince;
-            Customer."E-Mail" := CRMAccount.EMailAddress1;
-            Customer."Fax No." := CRMAccount.Fax;
-            Customer."Home Page" := CRMAccount.WebSiteURL;
-            Customer."Phone No." := CRMAccount.Telephone1;
-            Customer."Primary Contact No." := CRMAccount.PrimaryContactId;
-            Customer.Modify(true) //This will create contact for this account
+            Customer.city := Format(CRMAccount.Address1_City, MaxStrLen(Customer.city));
+            Customer."Country/Region Code" := Format(CRMAccount.Address1_Country, MaxStrLen(Customer."Country/Region Code"));
+            Customer.County := Format(CRMAccount.Address1_StateOrProvince, MaxStrLen(Customer.County));
+            Customer."E-Mail" := Format(CRMAccount.EMailAddress1, MaxStrLen(Customer."E-Mail"));
+            Customer."Fax No." := Format(CRMAccount.Fax, MaxStrLen(Customer."Fax No."));
+            Customer."Home Page" := Format(CRMAccount.WebSiteURL, MaxStrLen(Customer."Home Page"));
+            Customer."Phone No." := Format(CRMAccount.Telephone1, MaxStrLen(Customer."Phone No."));
+            if CRMIntegrationRecord.FindRecordIDFromID(CRMAccount.PrimaryContactId, Database::Contact, RecID) then
+                if Contact.get(RecID) then
+                    Customer."Primary Contact No." := Contact."No.";
+
+            Customer.Modify(true); //This will create contact for this account
             //InsertNewContact(Customer, NAVContact, pCompanyName);
         end else
             Error('Cannot find CRM Account %1', CRMAccountId);
@@ -279,21 +275,23 @@ codeunit 60001 "IOSH_Customer Management"
                 //find integration record id
                 NavContact.Name := IOSH_CRMContact.FullName;
                 NavContact.Type := NavContact.Type::Person;
-                NavContact.Address := IOSH_CRMContact.Address1_Line1;
-                NavContact."Address 2" := IOSH_CRMContact.Address1_Line2;
-                NavContact."Address 2" := IOSH_CRMContact.Address1_Line2;
+                NavContact.Address := Format(IOSH_CRMContact.Address1_Line1, MaxStrLen(NavContact.Address));
+                NavContact."Address 2" := Format(IOSH_CRMContact.Address1_Line2, MaxStrLen(NavContact."Address 2"));
                 NavContact."Post Code" := IOSH_CRMContact.Address1_PostalCode;
-                NavContact.City := IOSH_CRMContact.Address1_City;
-                NavContact."Country/Region Code" := IOSH_CRMContact.Address1_Country;
-                NavContact.County := IOSH_CRMContact.Address1_StateOrProvince;
-                NavContact."E-Mail" := IOSH_CRMContact.EMailAddress1;
+                NavContact.City := Format(IOSH_CRMContact.Address1_City, MaxStrLen(NavContact.City));
+                //NavContact."Country/Region Code" := IOSH_CRMContact.Address1_Country;
+                NavContact."Country/Region Code" := FORMAT(IOSH_CRMContact.Address1_Country, MAXSTRLEN(NavContact."Country/Region Code"));
+                NavContact.County := Format(IOSH_CRMContact.Address1_StateOrProvince, MaxStrLen(NavContact.County));
+                NavContact."E-Mail" := Format(IOSH_CRMContact.EMailAddress1, MaxStrLen(NavContact."E-Mail"));
                 NavContact."Fax No." := IOSH_CRMContact.Fax;
-                NavContact."First Name" := IOSH_CRMContact.FirstName;
-                NavContact."Middle Name" := IOSH_CRMContact.MiddleName;
-                NavContact.Surname := IOSH_CRMContact.LastName;
-                NavContact."Mobile Phone No." := IOSH_CRMContact.MobilePhone;
-                NavContact."Home Page" := IOSH_CRMContact.WebSiteUrl;
-                NavContact."Phone No." := IOSH_CRMContact.Telephone1;
+                NavContact."First Name" := Format(IOSH_CRMContact.FirstName, MaxStrLen(NavContact."First Name"));
+                NavContact."Middle Name" := Format(IOSH_CRMContact.MiddleName, MaxStrLen(NavContact."Middle Name"));
+                NavContact.Surname := Format(IOSH_CRMContact.LastName, MaxStrLen(NavContact.Surname));
+
+                NavContact."Mobile Phone No." := Format(IOSH_CRMContact.MobilePhone, MaxStrLen(NavContact."Mobile Phone No."));
+                NavContact."Home Page" := Format(IOSH_CRMContact.WebSiteUrl, MaxStrLen(NavContact."Home Page"));
+                NavContact."Phone No." := Format(IOSH_CRMContact.Telephone1, MaxStrLen(NavContact."Phone No."));
+
                 NavContact.OnModify(xRec);
                 NavContact.Modify(true);
 
@@ -307,21 +305,22 @@ codeunit 60001 "IOSH_Customer Management"
 
     end;
     //Create Customer if CRM Contact has create customer in BC for data migration
-    procedure createCustomerFromNAVContact(var Contact: Record Contact; BCTemplateCode: Option UK,EU,ROW)
+    procedure createCustomerFromNAVContact(var Contact: Record Contact; BCTemplateCode: Option UK,EU,ROW; Var Cust: record Customer)
     var
         CRMContact: Record "CRM Contact";
         NAVContact: Record Contact;
-        Cust: Record Customer;
+        SalesRecSetup: Record "Sales & Receivables Setup";
+        //Cust: Record Customer;
         ContBusRel: Record "Contact Business Relation";
         RMSetup: Record "Marketing Setup";
         TemplateCode: code[10];
-        SalesRecSetup: Record "Sales & Receivables Setup";
+
     begin
         //if contact exists just call create customer from that contact
         //else create customer then contact
 
         //find integration record id
-        SalesRecSetup.get;
+        SalesRecSetup.get();
         case BCTemplateCode of
             BCTemplatecode::EU:
                 TemplateCode := SalesRecSetup."EU Customer Template Code";
@@ -331,12 +330,15 @@ codeunit 60001 "IOSH_Customer Management"
                 TemplateCode := SalesRecSetup."ROW Customer Template Code";
         end;
         Contact.CreateCustomer(templateCode);
+
         //updateCustomer
-        RMSetup.GET;
+        RMSetup.GET();
         RMSetup.TESTFIELD("Bus. Rel. Code for Customers");
         if ContBusRel.get(Contact."No.", RMSetup."Bus. Rel. Code for Customers") then
             if cust.get(ContBusRel."No.") then begin
                 Cust."Dynamics 365 Contact Customer" := true;
+                Cust."Contact No" := Contact."No.";
+                Cust."Partner Type" := Cust."Partner Type"::Person;
                 Cust.Modify();
             end;
     end;
@@ -348,31 +350,99 @@ codeunit 60001 "IOSH_Customer Management"
         ContBusRel: Record "Contact Business Relation";
         RecRef: RecordRef;
         RecordID: RecordId;
+
+
     begin
         //if contact exists just call create customer from that contact
         //else create customer then contact type company
+
         if IOSH_CRMContact.get(CRMContactId) then begin
             //find integration record id
-            NavContact.init;
+            NavContact.init();
             NavContact.Name := IOSH_CRMContact.FullName;
             NavContact.Type := NavContact.Type::Person;
-            NavContact.Address := IOSH_CRMContact.Address1_Line1;
-            NavContact."Address 2" := IOSH_CRMContact.Address1_Line2;
-            NavContact."Address 2" := IOSH_CRMContact.Address1_Line2;
+            NavContact.Address := Format(IOSH_CRMContact.Address1_Line1, MaxStrLen(NavContact.Address));
+            NavContact."Address 2" := Format(IOSH_CRMContact.Address1_Line2, MaxStrLen(NavContact."Address 2"));
             NavContact."Post Code" := IOSH_CRMContact.Address1_PostalCode;
-            NavContact.City := IOSH_CRMContact.Address1_City;
-            NavContact."Country/Region Code" := IOSH_CRMContact.Address1_Country;
-            NavContact.County := IOSH_CRMContact.Address1_StateOrProvince;
-            NavContact."E-Mail" := IOSH_CRMContact.EMailAddress1;
+            NavContact.City := Format(IOSH_CRMContact.Address1_City, MaxStrLen(NavContact.City));
+            //NavContact."Country/Region Code" := IOSH_CRMContact.Address1_Country;
+            NavContact."Country/Region Code" := FORMAT(IOSH_CRMContact.Address1_Country, MAXSTRLEN(NavContact."Country/Region Code"));
+            NavContact.County := Format(IOSH_CRMContact.Address1_StateOrProvince, MaxStrLen(NavContact.County));
+            NavContact."E-Mail" := Format(IOSH_CRMContact.EMailAddress1, MaxStrLen(NavContact."E-Mail"));
             NavContact."Fax No." := IOSH_CRMContact.Fax;
-            NavContact."First Name" := IOSH_CRMContact.FirstName;
-            NavContact."Middle Name" := IOSH_CRMContact.MiddleName;
-            NavContact.Surname := IOSH_CRMContact.LastName;
-            NavContact."Mobile Phone No." := IOSH_CRMContact.MobilePhone;
-            NavContact."Home Page" := IOSH_CRMContact.WebSiteUrl;
-            NavContact."Phone No." := IOSH_CRMContact.Telephone1;
+            NavContact."First Name" := Format(IOSH_CRMContact.FirstName, MaxStrLen(NavContact."First Name"));
+            NavContact."Middle Name" := Format(IOSH_CRMContact.MiddleName, MaxStrLen(NavContact."Middle Name"));
+            NavContact.Surname := Format(IOSH_CRMContact.LastName, MaxStrLen(NavContact.Surname));
+
+            NavContact."Mobile Phone No." := Format(IOSH_CRMContact.MobilePhone, MaxStrLen(NavContact."Mobile Phone No."));
+            NavContact."Home Page" := Format(IOSH_CRMContact.WebSiteUrl, MaxStrLen(NavContact."Home Page"));
+            NavContact."Phone No." := Format(IOSH_CRMContact.Telephone1, MaxStrLen(NavContact."Phone No."));
+
             NavContact.insert(True); //create only customer if the contact already sync
-            CRMIntegrationRecord.CoupleRecordIdToCRMID(NAVContact.RecordId(), CRMContactId);
+            //Commit();
+
+            CRMIntegrationRecord.CoupleRecordIdToCRMID(NAVContact.RecordId, CRMContactId);
+        end else
+            Error('Cannot find CRM Contact %1', CRMContactId);
+
+    end;
+
+    procedure createCustomerPrimaryContact(CRMContactId: Guid; var NavContact: Record Contact; Customer: Record Customer)
+    var
+        IOSH_CRMContact: Record IOSH_CRMContact;
+        CRMIntegrationRecord: Record "CRM Integration Record";
+        ContBusRel: Record "Contact Business Relation";
+        RMSetup: Record "Marketing Setup";
+        ContComp: Record Contact;
+        RecRef: RecordRef;
+        RecordID: RecordId;
+
+
+    begin
+        //if contact exists just call create customer from that contact
+        //else create customer then contact type company
+
+        if IOSH_CRMContact.get(CRMContactId) then begin
+            //find integration record id
+            NavContact.init();
+            NavContact.Name := IOSH_CRMContact.FullName;
+            NavContact.Type := NavContact.Type::Person;
+            NavContact.Address := Format(IOSH_CRMContact.Address1_Line1, MaxStrLen(NavContact.Address));
+            NavContact."Address 2" := Format(IOSH_CRMContact.Address1_Line2, MaxStrLen(NavContact."Address 2"));
+            NavContact."Post Code" := IOSH_CRMContact.Address1_PostalCode;
+            NavContact.City := Format(IOSH_CRMContact.Address1_City, MaxStrLen(NavContact.City));
+            //NavContact."Country/Region Code" := IOSH_CRMContact.Address1_Country;
+            NavContact."Country/Region Code" := FORMAT(IOSH_CRMContact.Address1_Country, MAXSTRLEN(NavContact."Country/Region Code"));
+            NavContact.County := Format(IOSH_CRMContact.Address1_StateOrProvince, MaxStrLen(NavContact.County));
+            NavContact."E-Mail" := Format(IOSH_CRMContact.EMailAddress1, MaxStrLen(NavContact."E-Mail"));
+            NavContact."Fax No." := IOSH_CRMContact.Fax;
+            NavContact."First Name" := Format(IOSH_CRMContact.FirstName, MaxStrLen(NavContact."First Name"));
+            NavContact."Middle Name" := Format(IOSH_CRMContact.MiddleName, MaxStrLen(NavContact."Middle Name"));
+            NavContact.Surname := Format(IOSH_CRMContact.LastName, MaxStrLen(NavContact.Surname));
+
+            NavContact."Mobile Phone No." := Format(IOSH_CRMContact.MobilePhone, MaxStrLen(NavContact."Mobile Phone No."));
+            NavContact."Home Page" := Format(IOSH_CRMContact.WebSiteUrl, MaxStrLen(NavContact."Home Page"));
+            NavContact."Phone No." := Format(IOSH_CRMContact.Telephone1, MaxStrLen(NavContact."Phone No."));
+
+
+            ContBusRel.SETCURRENTKEY("Link to Table", "No.");
+            ContBusRel.SETRANGE("Link to Table", ContBusRel."Link to Table"::Customer);
+            ContBusRel.SETRANGE("No.", Customer."No.");
+            if ContBusRel.FINDFIRST() then
+                IF ContComp.GET(ContBusRel."Contact No.") THEN
+                    NavContact.validate("Company No.", ContComp."No.");
+
+            NavContact.insert(True); //create only customer if the contact already sync
+            //Commit();
+            CRMIntegrationRecord.CoupleRecordIdToCRMID(NAVContact.RecordId, CRMContactId);
+            // WITH ContBusRel DO BEGIN
+            //     INIT;
+            //     "Contact No." := NavContact."No.";
+            //     "Business Relation Code" := RMSetup."Bus. Rel. Code for Customers";
+            //     "Link to Table" := "Link to Table"::Customer;
+            //     "No." := Customer."No.";
+            //     INSERT(TRUE);
+            // END;
         end else
             Error('Cannot find CRM Contact %1', CRMContactId);
 
@@ -539,6 +609,7 @@ codeunit 60001 "IOSH_Customer Management"
     //     Cust.MODIFY;
     // end;
     var
+        CRMIntegrationRecord: Record "CRM Integration Record";
         ConfigTemplateManagement: Codeunit "Config. Template Management";
         ConfigTemplateHeader: Record "Config. Template Header";
         CustomerRecRef: RecordRef;

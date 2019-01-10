@@ -29,8 +29,8 @@ codeunit 60007 UpdateItemJobQ
                                 RecRef.SetTable(Item);
                                 NAVModifiedOn := CreateDateTime(Item."Last Date Modified", item."Last Time Modified");
                                 //if IOSH_CRMContact.ModifiedOn > CRMIntegrationRecord."Last Synch. Modified On" then begin //Cant use
-                                if IOSH_CRMProduct.ModifiedOn > NAVModifiedOn then begin
-                                    UpdateNAVItem(IOSH_CRMProduct.ProductId, Item);
+                                if IOSH_CRMProduct.ModifiedOn < NAVModifiedOn then begin
+                                    UpdateCRMItem(IOSH_CRMProduct.ProductId, Item);
                                     CRMIntegrationRecord."Last Synch. Modified On" := CurrentDateTime();
                                     CRMIntegrationRecord."Last Synch. CRM Modified On" := IOSH_CRMProduct.ModifiedOn;
                                     CRMIntegrationRecord.Modify();
@@ -40,7 +40,7 @@ codeunit 60007 UpdateItemJobQ
             until IOSH_CRMProduct.next() = 0;
     end;
 
-    procedure UpdateNAVItem(ProductID: Guid; Item: Record Item)
+    procedure UpdateCRMItem(ProductID: Guid; Item: Record Item)
     var
         CRMProduct: Record "CRM Product";
         lastDateTime: DateTime;
@@ -53,12 +53,15 @@ codeunit 60007 UpdateItemJobQ
         // //xRec := NavContact;
         if CRMProduct.get(ProductID) then begin
             //find integration record id
-            item.Description := CRMProduct.Name;
+            CRMProduct.Name := item.Description;
 
-            CRMUOMSchedule.SetRange(UoMScheduleId, CRMProduct.DefaultUoMScheduleId);
+            CRMUOMSchedule.SetRange(BaseUoMName, Item."Base Unit of Measure");
             if CRMUOMSchedule.FindFirst() then
-                Item."Base Unit of Measure" := CRMUOMSchedule.BaseUoMName;
-            Item.Modify();
+                CRMProduct.DefaultUoMScheduleId := CRMUOMSchedule.UoMScheduleId;
+            CRMUOM.SetRange(UoMScheduleId, CRMProduct.DefaultUoMScheduleId);
+            if CRMUOM.FindFirst() then
+                CRMProduct.DefaultUoMId := CRMUOM.UoMId;
+            CRMProduct.Modify();
 
             //     /* NavContact."Last Date Modified" := DT2Date(IOSH_CRMContact.ModifiedOn);
             //     NavContact."Last Time Modified" := DT2Time(IOSH_CRMContact.ModifiedOn);
