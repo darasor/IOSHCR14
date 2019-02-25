@@ -13,9 +13,7 @@ codeunit 60001 "IOSH_Customer Management"
         Cust: Record customer;
         SalesRecSetup: Record "Sales & Receivables Setup";
     begin
-        //CustTemplate.ChangeCompany(pCompanyName);
-        //SalesRecSetup.ChangeCompany(pCompanyName);
-        SalesRecSetup.get;
+        SalesRecSetup.get();
         case TemplateCode of
             Templatecode::EU:
                 if custtemplate.get(SalesRecSetup."EU Customer Template Code") then;
@@ -24,7 +22,7 @@ codeunit 60001 "IOSH_Customer Management"
             TemplateCode::ROW:
                 if CustTemplate.get(SalesRecSetup."ROW Customer Template Code") then;
         end;
-        //cust.ChangeCompany(pCompanyName);
+
         if cust.get(pCustomer."No.") then;
 
         IF CustTemplate.Code <> '' THEN BEGIN
@@ -51,8 +49,6 @@ codeunit 60001 "IOSH_Customer Management"
             Cust."Shipment Method Code" := CustTemplate."Shipment Method Code";
             Cust.MODIFY();
 
-            //DefaultDim.ChangeCompany(pCompanyName);
-            //DefaultDim2.ChangeCompany(pCompanyName);
             DefaultDim.SETRANGE("Table ID", DATABASE::"Customer Template");
             DefaultDim.SETRANGE("No.", CustTemplate.Code);
             IF DefaultDim.FIND('-') THEN
@@ -68,7 +64,6 @@ codeunit 60001 "IOSH_Customer Management"
                 UNTIL DefaultDim.NEXT() = 0;
         END;
     END;
-
 
     //procedure createCustomerUseCRMAccount(CRMAccountId: Guid; Var Customer: Record customer; pCompanyName: code[30])
     procedure createCustomerUseCRMAccount(CRMAccountId: Guid; Var Customer: Record customer)
@@ -99,15 +94,12 @@ codeunit 60001 "IOSH_Customer Management"
             Customer."Phone No." := Format(CRMAccount.Telephone1, MaxStrLen(Customer."Phone No."));
 
             //Need to write code to convert GUID to text
-            if not Customer.Insert(true) then
-                Error('Error during create customer was %1', GetLastErrorText()); //This will create contact for this account
-                                                                                  //Commit(); //to get Customer No.
+            if not Customer.Insert(false) then //22/02/19 
+                                               //if not Customer.Insert(true) then
+                                               //Error('Error during create customer was %1', GetLastErrorText()); //22/02/19
+                Error('Error during create customer was %1-CRMAccount name: %2', GetLastErrorText(), CRMAccount.Name); //This will create contact for this account
+                                                                                                                       //Commit(); //to get Customer No.
 
-            /*  DestinationRecRef.GetTable(Customer);
-             SourceRecRef.GetTable(CRMAccount);
-             ParameterSourceRecordRef := SourceRecRef;
-             ParameterDestinationRecordRef := DestinationRecRef;
-             TransferField(CRMAccount.FieldNo(CRMAccount.PrimaryContactId), Customer.FieldNo(Customer."Primary Contact No."), '', true); */
             if CRMIntegrationRecord.FindRecordIDFromID(CRMAccount.PrimaryContactId, Database::Contact, RecordID) then begin
                 if Contact.get(RecordID) then
                     Customer."Primary Contact No." := Contact."No.";
@@ -115,9 +107,11 @@ codeunit 60001 "IOSH_Customer Management"
                 Customer.Modify();
             end else begin
                 createCustomerPrimaryContact(CRMAccount.PrimaryContactId, NAVContact, Customer);
-                Customer."Primary Contact No." := NAVContact."No.";
-                Customer.Contact := NAVContact.Name;
-                Customer.Modify();
+                if NOT (NAVContact."No." = '') then begin
+                    Customer."Primary Contact No." := NAVContact."No.";
+                    Customer.Contact := NAVContact.Name;
+                    Customer.Modify();
+                end;
             end;
             applyCustomerTemplate(CRMAccount."BC Template Code", Customer);
 
@@ -191,6 +185,7 @@ codeunit 60001 "IOSH_Customer Management"
                 if Contact.get(RecID) then
                     Customer."Primary Contact No." := Contact."No.";
 
+
             Customer.Modify(true); //This will create contact for this account
             //InsertNewContact(Customer, NAVContact, pCompanyName);
         end else
@@ -201,6 +196,7 @@ codeunit 60001 "IOSH_Customer Management"
     var
         CRMAccount: Record IOSH_CRMAccount;
         CRMIntegrationRecord: Record "CRM Integration Record";
+        Contact: Record Contact;
         CRMAccountId: Guid;
 
     begin
@@ -219,7 +215,12 @@ codeunit 60001 "IOSH_Customer Management"
                     CRMAccount.Fax := Cust."Fax No.";
                     CRMAccount.WebSiteURL := Cust."Home Page";
                     CRMAccount.Telephone1 := Cust."Phone No.";
-                    CRMAccount.PrimaryContactId := Cust."Primary Contact No.";
+                    //25/02/19 b
+                    //CRMAccount.PrimaryContactId :=Cust."Primary Contact No." ;
+                    if Contact.get(Cust."Primary Contact No.") then
+                        if CRMIntegrationRecord.FindIDFromRecordID(Contact.RecordId(), CRMAccountId) then
+                            CRMAccount.PrimaryContactId := CRMAccountId;
+                    //25/02/19
                     CRMAccount.Modify();
                 end;
             end else
@@ -255,7 +256,7 @@ codeunit 60001 "IOSH_Customer Management"
                     IOSH_CRMContact.WebSiteUrl := NavContact."Home Page";
                     IOSH_CRMContact.Telephone1 := NavContact."Phone No.";
                     IOSH_CRMContact.ModifiedOn := CreateDateTime(NavContact."Last Date Modified", NavContact."Last Time Modified");
-                    IOSH_CRMContact.modify;
+                    IOSH_CRMContact.modify();
                 end;
             end else
                 Error('Cannot find CRM Contact %1', CRMContactId);
@@ -350,8 +351,6 @@ codeunit 60001 "IOSH_Customer Management"
         ContBusRel: Record "Contact Business Relation";
         RecRef: RecordRef;
         RecordID: RecordId;
-
-
     begin
         //if contact exists just call create customer from that contact
         //else create customer then contact type company
@@ -396,11 +395,13 @@ codeunit 60001 "IOSH_Customer Management"
         ContComp: Record Contact;
         RecRef: RecordRef;
         RecordID: RecordId;
-
-
     begin
         //if contact exists just call create customer from that contact
         //else create customer then contact type company
+        //Begin 22/02/19 fixing updateCustomerJobQ
+        if CRMContactId = '{00000000-0000-0000-0000-000000000000}' then
+            exit;
+        //End 22/02/19
 
         if IOSH_CRMContact.get(CRMContactId) then begin
             //find integration record id
@@ -480,57 +481,6 @@ codeunit 60001 "IOSH_Customer Management"
         EXIT(ContBusRel.FINDFIRST);
     end;
 
-    // procedure TransferField(SourceFieldNo: Integer; DestinationFieldNo: Integer; ConstantValue: Text; ValidateDestinationField: Boolean): Boolean
-    // var
-    //     DestinationFieldRef: FieldRef;
-    //     SourceFieldRef: FieldRef;
-
-    // begin
-    //     DestinationFieldRef := ParameterDestinationRecordRef.FIELD(DestinationFieldNo);
-
-    //     SourceFieldRef := ParameterSourceRecordRef.FIELD(SourceFieldNo);
-
-    //     //IF IsFieldModified(SourceFieldRef,DestinationFieldRef) THEN
-    //     EXIT(TransferFieldData(SourceFieldRef, DestinationFieldRef, ValidateDestinationField));
-
-    //     EXIT(FALSE);
-    // end;
-
-    // procedure TransferFieldData(VAR SourceFieldRef: FieldRef; VAR DestinationFieldRef: FieldRef; ValidateDestinationField: Boolean): Boolean
-    // var
-    //     NewValue: Variant;
-    //     OutlookSynchTypeConv: Codeunit "Outlook Synch. Type Conv";
-    // begin
-    //     // OnTransferFieldData is an event for handling an exceptional mapping that is not implemented by integration records
-    //     // OnTransferFieldData(SourceFieldRef,DestinationFieldRef,NewValue,IsValueFound,NeedsConversion);
-    //     /*     IF IsValueFound THEN BEGIN
-    //         IF NOT NeedsConversion THEN
-    //             EXIT(SetDestinationValue(DestinationFieldRef,NewValue,ValidateDestinationField));
-    //         END ELSE */
-    //     NewValue := SourceFieldRef.VALUE;
-
-    //     /* 
-    //         IF NOT NeedsConversion AND
-    //         (SourceFieldRef.TYPE = DestinationFieldRef.TYPE) AND (DestinationFieldRef.LENGTH >= SourceFieldRef.LENGTH)
-    //         THEN
-    //         EXIT(SetDestinationValue(DestinationFieldRef,SourceFieldRef.VALUE,ValidateDestinationField)); */
-    //     //EXIT(OutlookSynchTypeConv.EvaluateTextToFieldRef(FORMAT(NewValue), DestinationFieldRef, ValidateDestinationField));
-    //     EXIT(SetDestinationValue(DestinationFieldRef, SourceFieldRef.VALUE, ValidateDestinationField));
-
-    // end;
-
-    // procedure SetDestinationValue(VAR DestinationFieldRef: FieldRef; NewValue: Variant; ValidateDestinationField: Boolean): Boolean
-    // var
-    //     currValue: Variant;
-    //     IsModified: boolean;
-    // begin
-    //     CurrValue := FORMAT(DestinationFieldRef.VALUE);
-    //     IsModified := (FORMAT(CurrValue) <> FORMAT(NewValue));
-    //     DestinationFieldRef.VALUE := NewValue;
-    //     IF IsModified AND ValidateDestinationField THEN
-    //         DestinationFieldRef.VALIDATE;
-    //     EXIT(IsModified);
-    // end;
     // procedure InsertNewContact(VAR Cust: Record Customer; Var Cont: Record Contact; pCompanyName: code[30])
     // var
     //     RMSetup: Record "Marketing Setup";
@@ -610,13 +560,12 @@ codeunit 60001 "IOSH_Customer Management"
     // end;
     var
         CRMIntegrationRecord: Record "CRM Integration Record";
-        ConfigTemplateManagement: Codeunit "Config. Template Management";
+        //ConfigTemplateManagement: Codeunit "Config. Template Management";
         ConfigTemplateHeader: Record "Config. Template Header";
         CustomerRecRef: RecordRef;
         DimensionsTemplate: Record "Dimensions Template";
-        TisCRMIntegMgt: Codeunit TIS_CRMIntegrationMgt;
-        TisFunc: Codeunit TISFunctions;
+        TisCRMIntegMgt: Codeunit "TIS CRMIntegrationMgt";
+        TisFunc: Codeunit TIS_Functions;
         ParameterDestinationRecordRef: Recordref;
         ParameterSourceRecordRef: RecordRef;
-
 }

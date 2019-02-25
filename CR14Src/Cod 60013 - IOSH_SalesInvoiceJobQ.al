@@ -4,8 +4,8 @@ codeunit 60013 IOSH_CreateContactSalesInvoice
     trigger OnRun()
     begin
         CODEUNIT.RUN(CODEUNIT::"CRM Integration Management");
-        COMMIT;
-        CreateCRMContactSalesInvoice;
+        COMMIT();
+        CreateCRMContactSalesInvoice();
     end;
 
     procedure CreateCRMContactSalesInvoice();

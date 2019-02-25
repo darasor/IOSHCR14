@@ -53,7 +53,7 @@ pageextension 60013 CRMCOntactExt extends "CRM Contact List" //MyTargetPageId
 
         SalesPost: Codeunit "Sales-Post";
         CustMgt: Codeunit "IOSH_Customer Management";
-        Tis_CRM_Mgt: Codeunit TIS_CRMIntegrationMgt;
+        Tis_CRM_Mgt: Codeunit "TIS CRMIntegrationMgt";
         CRMSalesInvoice: Codeunit iOSH_CreateCRMSalesInvoice;
         SalesInv: Record "Sales Invoice Header";
         RecRef: RecordRef;
@@ -61,7 +61,7 @@ pageextension 60013 CRMCOntactExt extends "CRM Contact List" //MyTargetPageId
     begin
         //TEST Script Only
         //Message('CRM page');
-        //CreateContact.Run();
+        CreateContact.Run();
         //createCustomer.Run();
         //updateContact.Run();
         //updateItem.Run();
@@ -69,7 +69,6 @@ pageextension 60013 CRMCOntactExt extends "CRM Contact List" //MyTargetPageId
 
         //CRMAccount.Setfilter(CRMAccount.Name, 'CH Fertility Group');
         //if CRMAccount.FindFirst() then
-
         //    CustMgt.createCustomerUseCRMAccount(CRMAccount.AccountId, Customer);
 
 
@@ -104,11 +103,11 @@ pageextension 60013 CRMCOntactExt extends "CRM Contact List" //MyTargetPageId
         // end;
 
         //TEST POSTED SALES INVOICE
-        SalesInv.SetRange("No.", 'ISL-SI020');
-        if SalesInv.FindFirst() then
-            // if Customer.get(SalesInv."Sell-to Customer No.") then
-            //     if Customer."Dynamics 365 Contact Customer" then
-            CRMSalesInvoice.Run(SalesInv);
+        // SalesInv.SetRange("No.", 'ISL-SI021');
+        // if SalesInv.FindFirst() then
+        //     // if Customer.get(SalesInv."Sell-to Customer No.") then
+        //     //     if Customer."Dynamics 365 Contact Customer" then
+        //     CRMSalesInvoice.Run(SalesInv);
     end;
 
     trigger OnAfterGetCurrRecord()

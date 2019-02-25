@@ -297,7 +297,7 @@ codeunit 60012 iOSH_CRMSalesOrderToSalesOrder
         CRMAccountId: Guid;
         CRMContact: Record "CRM Contact";
         RecRef: RecordRef;
-        Tis_CRM_Mgt: Codeunit TIS_CRMIntegrationMgt;
+        Tis_CRM_Mgt: Codeunit "TIS CRMIntegrationMgt";
     begin
         IF ISNULLGUID(CRMSalesorder.CustomerId) THEN
             ERROR(NoCustomerErr, CannotCreateSalesOrderInNAVTxt, CRMSalesorder.Description, CRMProductName.SHORT);

@@ -28,23 +28,23 @@ codeunit 60010 OnInstallApp
 
         EnqueueJobQueEntries := true;
 
-        // RecreateJobQueueEntry(
-        //     EnqueueJobQueEntries,
-        //     CODEUNIT::IOSH_Auto_CreateSalesOrders,
-        //     2,
-        //     STRSUBSTNO(AutoCreateSalesOrdersTxt, CRMProductName.SHORT),
-        //     FALSE);
+        RecreateJobQueueEntry(
+            EnqueueJobQueEntries,
+            CODEUNIT::IOSH_Auto_CreateSalesOrders,
+            2,
+            STRSUBSTNO(AutoCreateSalesOrdersTxt, CRMProductName.SHORT),
+            FALSE);
 
-        // RecreateJobQueueEntry(
-        //     EnqueueJobQueEntries,
-        //     CODEUNIT::ContactDataMigrationJobQueue,
-        //     2,
-        //     STRSUBSTNO('Auto create contact for data migration from CRM', CRMProductName.SHORT),
-        //     FALSE);
+        RecreateJobQueueEntry(
+            EnqueueJobQueEntries,
+            CODEUNIT::ContactDataMigrationJobQueue,
+            2,
+            STRSUBSTNO('Auto create contact for data migration from CRM', CRMProductName.SHORT),
+            FALSE);
         RecreateJobQueueEntry(
             EnqueueJobQueEntries,
             CODEUNIT::IOSH_CreateContactSalesInvoice,
-            2,
+            60,
             STRSUBSTNO('Auto create CRM Invoice for Contact', CRMProductName.SHORT),
             FALSE);
         RecreateJobQueueEntry(

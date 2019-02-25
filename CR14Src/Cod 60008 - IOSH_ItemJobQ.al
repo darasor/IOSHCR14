@@ -28,11 +28,12 @@ codeunit 60008 IOSH_ItemJobQ
         CRMUOM: Record "CRM Uom";
         IOSH_CRMProduct: Record IOSH_CRM_Product;
         CRMUOMSchedule: Record "CRM Uomschedule";
+        TIS_CRMHelper: Codeunit TIS_CRMHelper;
         CRMID: Guid;
         OutLooktypeHelper: Codeunit "Outlook Synch. Type Conv";
         FieldRefvar: FieldRef;
         ParameterDestinationRecordRef: Recordref;
-        TiS_Intgration: Codeunit TIS_CRMIntegrationMgt;
+        TiS_Intgration: Codeunit "TIS CRMIntegrationMgt";
     begin
         // update CRM Product when Item is updated 
         //Cann't call this
@@ -68,15 +69,12 @@ codeunit 60008 IOSH_ItemJobQ
             IOSH_CRMProduct.IOSH_LegalEntityName := Item."Legal Entity Name";
 
             IOSH_CRMProduct.Insert(false);
-
+            // if CRMProduct.get(IOSH_CRMProduct.ProductId) then
+            //     TIS_CRMHelper.UpdateCRMProductAfterInsertRecord(CRMProduct);
             CRMIntegrationRecord.CoupleRecordIdToCRMID(Item.RecordId(), IOSH_CRMProduct.ProductId);
-        end else begin
+        end else
             if NOT CRMProduct.get(CRMID) then
                 TiS_Intgration.DeleteIfRecordDeleted(CRMID, Database::Item);
-        end;
-
-
-
 
     End;
 }

@@ -1,4 +1,4 @@
-codeunit 60002 TIS_CRMIntegrationMgt
+codeunit 60002 "TIS CRMIntegrationMgt"
 {
     trigger OnRun()
     begin
@@ -284,7 +284,6 @@ codeunit 60002 TIS_CRMIntegrationMgt
 
     var
         IntegrationRecord: Record "Integration Record";
-        CRMIntegrationMgt: Codeunit TIS_CRMIntegrationMgt;
         CustMgt: Codeunit "IOSH_Customer Management";
         jobQueue: Codeunit "Job Queue Start Codeunit";
 }

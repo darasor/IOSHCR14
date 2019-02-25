@@ -1,4 +1,4 @@
-pageextension 60010 ItemListExt extends "Item List" //MyTargetPageId
+pageextension 60019 ItemListExt extends "Item List" //MyTargetPageId
 {
 
     actions
@@ -10,7 +10,7 @@ pageextension 60010 ItemListExt extends "Item List" //MyTargetPageId
                 ApplicationArea = Basic, Suit;
                 CaptionML = ENU = 'IOSH Create CRM Product',
                         ENG = 'IOSH Create CRM Product';
-
+                Visible = false; //20/2/19 hide it
                 Image = New;
                 Promoted = true;
                 ToolTipML = ENU = 'Create a sales order in Dynamics NAV that is coupled to the Dynamics 365 for Sales entity.',

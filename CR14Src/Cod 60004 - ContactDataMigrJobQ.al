@@ -13,7 +13,7 @@ codeunit 60004 ContactDataMigrationJobQueue
         CRMIntegrationRecord: Record "CRM Integration Record";
         pRecordID: RecordId;
         RecRef: RecordRef;
-        Tis_CRM_Mgt: Codeunit TIS_CRMIntegrationMgt;
+        Tis_CRM_Mgt: Codeunit "TIS CRMIntegrationMgt";
     begin
         CODEUNIT.RUN(CODEUNIT::"CRM Integration Management");
         COMMIT();
@@ -27,8 +27,8 @@ codeunit 60004 ContactDataMigrationJobQueue
         if NOT (CompanyName() = SalesSetup.CharityLegalEntityName) then
             Exit;
         IOSH_CRMContact.SetRange("Create Charity Customer", true);
-        //IOSH_CRMContact.setrange(FullName, 'John Wayne');
-        //IOSH_CRMContact.SetRange("Create Contact in BC", true);
+        //IOSH_CRMContact.setrange(FullName, 'TestContactJQ DS'); //Uncomment this back after testing
+        //IOSH_CRMContact.SetRange("Create Contact in BC", true); //Uncomment this back after testing
         if IOSH_CRMContact.findset() then
             repeat
                 if NOT CRMIntegrationRecord.FindRecordIDFromID(IOSH_CRMContact.ContactId, Database::Contact, pRecordID) then begin

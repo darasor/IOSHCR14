@@ -20,7 +20,7 @@ codeunit 60006 UpdateCustomerJobQ
         IOSH_CRMAccount.SetRange("BC Template Code", IOSH_CRMAccount."BC Template Code"::UK);
         if IOSH_CRMAccount.findset() then
             repeat
-                if CRMIntegrationRecord.FindRecordIDFromID(IOSH_CRMAccount.AccountId, Database::Customer, RecordID) then begin
+                if CRMIntegrationRecord.FindRecordIDFromID(IOSH_CRMAccount.AccountId, Database::Customer, RecordID) then
                     if RecRef.get(RecordID) then
                         if RecRef.Number() = Database::Customer then begin
                             RecRef.SetTable(Cust);
@@ -35,8 +35,9 @@ codeunit 60006 UpdateCustomerJobQ
                                    CRMIntegrationRecord.Modify(); */
                             exit;
                         end;
-                end else
-                    CustMgt.createCustomerUseCRMAccount(IOSH_CRMAccount.AccountId, Cust);
+
+                //end else //22/02/09
+                //    CustMgt.createCustomerUseCRMAccount(IOSH_CRMAccount.AccountId, Cust); //22/02/19 Should not create customer here
             until IOSH_CRMAccount.next() = 0;
     end;
 }

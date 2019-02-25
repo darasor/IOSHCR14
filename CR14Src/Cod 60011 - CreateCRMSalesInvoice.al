@@ -35,27 +35,6 @@ codeunit 60011 iOSH_CreateCRMSalesInvoice
         NoCoupledSalesInvoiceHeaderErr: TextConst Comment = 'Cannot find the coupled %1 invoice header.', ENU = 'Cannot find the coupled %1 invoice header.';
         CannotFindSyncedProductErr: TextConst Comment = 'Cannot find synchronize the product %1.', ENU = 'Cannot find synchronize the product %1.';
 
-    local procedure ApplySalesOrderDiscounts(CRMSalesorder: Record 60007; var SalesHeader: Record 36);
-    var
-        SalesCalcDiscountByType: Codeunit 56;
-        CRMDiscountAmount: Decimal;
-    begin
-        // No discounts to apply
-        IF (CRMSalesorder.DiscountAmount = 0) AND (CRMSalesorder.DiscountPercentage = 0) THEN
-            EXIT;
-
-        // Attempt to set the discount, if NAV general and customer settings allow it
-        // Using CRM discounts
-        CRMDiscountAmount := CRMSalesorder.TotalLineItemAmount - CRMSalesorder.TotalAmountLessFreight;
-        SalesCalcDiscountByType.ApplyInvDiscBasedOnAmt(CRMDiscountAmount, SalesHeader);
-
-        // NAV settings (in G/L Setup as well as per-customer discounts) did not allow using the CRM discounts
-        // Using NAV discounts
-        // But the user will be able to manually update the discounts after the order is created in NAV
-        IF NOT CONFIRM(STRSUBSTNO(OverwriteCRMDiscountQst, PRODUCTNAME.SHORT, CRMProductName.SHORT), TRUE) THEN
-            ERROR('');
-    end;
-
     local procedure CopyCRMOptionFields(var CRMSalesInv: Record 5355; SalesHeader: Record 112);
     var
         CRMAccount: Record "CRM Account";
@@ -129,9 +108,10 @@ codeunit 60011 iOSH_CreateCRMSalesInvoice
         //if it's already couple then
         IF CRMIntegrationRecord.FindIDFromRecordID(SalesHeader.RecordId(), CRMSalesInvID) THEN
             if not IsNullGuid(CRMSalesInvID) then
-                EXIT(true)
-            else
-                CRMIntegrationRecord.RemoveCouplingToRecord(SalesHeader.RecordId());
+                if CRMSaleInvoice.get(CRMSalesInvID) then
+                    EXIT(true)
+                else
+                    CRMIntegrationRecord.RemoveCouplingToRecord(SalesHeader.RecordId());
 
         CreateSalesInvoiceHeader(CRMSaleInvoice, SalesHeader);
         //CreateSalesInvoiceLines(CRMSaleInvoice, SalesHeader); //TODO
@@ -151,8 +131,15 @@ codeunit 60011 iOSH_CreateCRMSalesInvoice
         DestinationRecRef: RecordRef;
         OwnerGuid: Guid;
     begin
-        CRMSaleInvoice.INIT();
-        CRMSaleInvoice.VALIDATE(InvoiceNumber, SalesHeader."No.");
+
+        CRMSaleInvoice.INIT;
+
+
+        CRMSaleInvoice.INSERT(FALSE);
+        //CRMSaleInvoice.Name := SalesHeader."No.";
+        CRMSaleInvoice.InvoiceNumber := SalesHeader."No."; //CRM Probably set this in the workflow
+
+        //CRMSaleInvoice.InvoiceNumber := SalesHeader."No.";
         CRMSaleInvoice.VALIDATE(OwnerIdType, CRMSaleInvoice.OwnerIdType::systemuser);
         //CRMSaleInvoice.Validate(CustomerIdType, CRMSaleInvoice.CustomerIdType::contact);
 
@@ -176,8 +163,9 @@ codeunit 60011 iOSH_CreateCRMSalesInvoice
 
         CopyCRMOptionFields(CRMSaleInvoice, SalesHeader);
         //RecordRef.GET(SalesHeader.RecordID);
+
         UpdateCRMInvoiceBeforeInsertRecord(SalesHeader, CRMSaleInvoice);
-        CRMSaleInvoice.INSERT();
+        //CRMSaleInvoice.INSERT(false);
         UpdateCRMInvoiceAfterInsertRecord(SalesHeader, CRMSaleInvoice);
     end;
 
@@ -219,7 +207,7 @@ codeunit 60011 iOSH_CreateCRMSalesInvoice
         CRMInvoice.DiscountPercentage := 0;
         CRMInvoice.TotalTax := CRMInvoice.TotalAmount - CRMInvoice.TotalAmountLessFreight;
         CRMInvoice.TotalDiscountAmount := CRMInvoice.DiscountAmount + CRMInvoice.TotalLineItemDiscountAmount;
-        CRMInvoice.MODIFY();
+        CRMInvoice.MODIFY(); //Commented this just to debug, uncommeted back as this was working before
         CRMSynchHelper.UpdateCRMInvoiceStatus(CRMInvoice, SalesInvoiceHeader);
 
         CRMSynchHelper.SetSalesInvoiceHeaderCoupledToCRM(SalesInvoiceHeader);
@@ -228,8 +216,10 @@ codeunit 60011 iOSH_CreateCRMSalesInvoice
     procedure UpdateCRMInvoiceBeforeInsertRecord(SalesInvoiceHeader: Record 112; var CRMInvoice: Record 5355);
     var
         ShipmentMethod: Record "Shipment Method";
-        CRMSalesOrder: Record IOSH_CRMSaleOrder;
+        IOSH_CRMSalesOrder: Record IOSH_CRMSaleOrder;
+        CRMSalesOrder: Record "CRM Salesorder";
         CRMContact: Record "CRM Contact";
+        CRMAccount: Record "CRM Account";
         Customer: Record Customer;
         Contact: Record contact;
         TypeHelper: Codeunit "Type Helper";
@@ -248,39 +238,69 @@ codeunit 60011 iOSH_CreateCRMSalesInvoice
         // END;
 
         //DestinationRecordRef.SETTABLE(CRMInvoice);
-        IF IOSH_CRMSalesOrderToSalesOrder.GetCRMSalesOrder(CRMSalesorder, SalesInvoiceHeader."Your Reference") THEN BEGIN
-            CRMInvoice.OpportunityId := CRMSalesorder.OpportunityId;
-            CRMInvoice.SalesOrderId := CRMSalesorder.SalesOrderId;
-            CRMInvoice.PriceLevelId := CRMSalesorder.PriceLevelId;
-            CRMInvoice.Name := CRMSalesorder.Name;
+        IF IOSH_CRMSalesOrderToSalesOrder.GetCRMSalesOrder(IOSH_CRMSalesOrder, SalesInvoiceHeader."Your Reference") THEN BEGIN
+            CRMInvoice.OpportunityId := IOSH_CRMSalesOrder.OpportunityId;
+            CRMInvoice.SalesOrderId := IOSH_CRMSalesOrder.SalesOrderId;
+            CRMInvoice.PriceLevelId := IOSH_CRMSalesOrder.PriceLevelId;
+            CRMInvoice.Name := IOSH_CRMSalesOrder.Name;
 
+            //For Account
+            if Customer.get(SalesInvoiceHeader."Sell-to Customer No.") then;
 
-            IF NOT IOSH_CRMSalesOrderToSalesOrder.GetCRMContactOfCRMSalesOrder(CRMSalesorder, CRMContact) THEN
-                ERROR(CustomerHasChangedErr, CRMSalesorder.OrderNumber, CRMProductName.SHORT);
+            if NOT Customer."Dynamics 365 Contact Customer" then begin
+                if CRMSalesOrder.get(IOSH_CRMSalesOrder.SalesOrderId) then;
+                IF NOT CRMSalesOrderToSalesOrder.GetCoupledCustomer(CRMSalesOrder, Customer) THEN
+                    IF NOT CRMSalesOrderToSalesOrder.GetCRMAccountOfCRMSalesOrder(CRMSalesOrder, CRMAccount) THEN
+                        ERROR(CustomerHasChangedErr, CRMSalesOrder.OrderNumber, CRMProductName.SHORT);
+                // IF NOT IOSH_CRMSalesOrderToSalesOrder.GetCoupledCustomer(IOSH_CRMSalesOrder, Customer) THEN
+                //     IF NOT IOSH_CRMSalesOrderToSalesOrder.GetCRMAccountOfCRMSalesOrder(IOSH_CRMSalesOrder, CRMAccount) THEN
+                //         ERROR(CustomerHasChangedErr, IOSH_CRMSalesOrder.OrderNumber, CRMProductName.SHORT);
+                // IF NOT CRMSynchHelper.SynchRecordIfMappingExists(DATABASE::"CRM Account", CRMAccount.AccountId) THEN
+                //     ERROR(CustomerHasChangedErr, CRMSalesorder.OrderNumber, CRMProductName.SHORT);
+
+                IF Customer."No." <> SalesInvoiceHeader."Sell-to Customer No." THEN
+                    ERROR(CustomerHasChangedErr, IOSH_CRMSalesOrder.OrderNumber, CRMProductName.SHORT);
+            end else
+                //End for Account
+
+                IF NOT IOSH_CRMSalesOrderToSalesOrder.GetCRMContactOfCRMSalesOrder(IOSH_CRMSalesOrder, CRMContact) THEN
+                    ERROR(CustomerHasChangedErr, IOSH_CRMSalesOrder.OrderNumber, CRMProductName.SHORT);
             // IF NOT CRMSynchHelper.SynchRecordIfMappingExists(DATABASE::"CRM Contact",CRMContact.AccountId) THEN
             // ERROR(CustomerHasChangedErr,CRMSalesorder.OrderNumber,CRMProductName.SHORT);
 
             // IF Customer."No." <> SalesInvoiceHeader."Sell-to Customer No." THEN
             //     ERROR(CustomerHasChangedErr,CRMSalesorder.OrderNumber,CRMProductName.SHORT);
-            CRMInvoice.CustomerId := CRMSalesorder.CustomerId;
-            CRMInvoice.CustomerIdType := CRMSalesorder.CustomerIdType;
+            CRMInvoice.CustomerId := IOSH_CRMSalesOrder.CustomerId;
+            CRMInvoice.CustomerIdType := IOSH_CRMSalesOrder.CustomerIdType;
         END ELSE BEGIN
             CRMInvoice.Name := SalesInvoiceHeader."No.";
-            Customer.GET(SalesInvoiceHeader."Sell-to Customer No.");
-            Contact.SetRange("No.", Customer."Contact No");
-            if Contact.FindFirst() then
-                IF NOT CRMIntegrationRecord.FindIDFromRecordID(Contact.RECORDID, AccountId) THEN
-                    //IF NOT CRMSynchHelper.SynchRecordIfMappingExists(DATABASE::Customer,Customer.RECORDID) THEN
-                    ERROR(CustomerHasChangedErr, CRMSalesorder.OrderNumber, CRMProductName.SHORT);
+            if Customer.GET(SalesInvoiceHeader."Sell-to Customer No.") then;
 
-            CRMInvoice.CustomerId := AccountId;
-            CRMInvoice.CustomerIdType := CRMInvoice.CustomerIdType::contact;
-            // IF NOT CRMSynchHelper.FindCRMPriceListByCurrencyCode(CRMPricelevel,SalesInvoiceHeader."Currency Code") THEN
-            //     CRMSynchHelper.CreateCRMPricelevelInCurrency(
-            //     CRMPricelevel,SalesInvoiceHeader."Currency Code",SalesInvoiceHeader."Currency Factor");
-            // CRMInvoice.PriceLevelId := CRMPricelevel.PriceLevelId;
+            //For Account
+
+            if NOT Customer."Dynamics 365 Contact Customer" then begin
+                IF NOT CRMIntegrationRecord.FindIDFromRecordID(Customer.RECORDID, AccountId) THEN
+                    // IF NOT CRMSynchHelper.SynchRecordIfMappingExists(DATABASE::Customer, Customer.RECORDID) THEN
+                    ERROR(CustomerHasChangedErr, IOSH_CRMSalesOrder.OrderNumber, CRMProductName.SHORT);
+                CRMInvoice.CustomerId := AccountId;
+                CRMInvoice.CustomerIdType := CRMInvoice.CustomerIdType::account;
+            end else begin
+                //End for Account
+
+                Contact.SetRange("No.", Customer."Contact No");
+                if Contact.FindFirst() then
+                    IF NOT CRMIntegrationRecord.FindIDFromRecordID(Contact.RECORDID, AccountId) THEN
+                        //IF NOT CRMSynchHelper.SynchRecordIfMappingExists(DATABASE::Customer,Customer.RECORDID) THEN
+                        ERROR(CustomerHasChangedErr, IOSH_CRMSalesOrder.OrderNumber, CRMProductName.SHORT);
+                CRMInvoice.CustomerId := AccountId;
+                CRMInvoice.CustomerIdType := CRMInvoice.CustomerIdType::contact;
+                // IF NOT CRMSynchHelper.FindCRMPriceListByCurrencyCode(CRMPricelevel,SalesInvoiceHeader."Currency Code") THEN
+                //     CRMSynchHelper.CreateCRMPricelevelInCurrency(
+                //     CRMPricelevel,SalesInvoiceHeader."Currency Code",SalesInvoiceHeader."Currency Factor");
+                // CRMInvoice.PriceLevelId := CRMPricelevel.PriceLevelId;
+            end;
         END;
-        DestinationRecordRef.GETTABLE(CRMInvoice);
+        //DestinationRecordRef.GETTABLE(CRMInvoice);
     end;
 
     procedure UpdateCRMInvoiceDetailsBeforeInsertRecord(SalesInvoiceLine: Record "Sales Invoice Line"; VAR CRMInvoicedetail: Record "CRM Invoicedetail");

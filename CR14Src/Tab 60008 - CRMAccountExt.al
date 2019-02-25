@@ -916,17 +916,17 @@ table 60008 "IOSH_CRMAccount"
             OptionCaption = ' ,systemuser,team';
             OptionMembers = " ",systemuser,team;
         }
-        /* field(111; PreferredAppointmentDayCode; Option)
-        {
-            Caption = 'Preferred Day';
-            Description = 'Select the preferred day of the week for service appointments.';
-            ExternalName = 'preferredappointmentdaycode';
-            ExternalType = 'Picklist';
-            InitValue = " ";
-            OptionCaption = ' ,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday';
-            OptionOrdinalValues = - 1, 0, 1, 2, 3, 4, 5, 6;
-            OptionMembers = " ",Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday;
-        } */
+        // field(111; PreferredAppointmentDayCode; Option)
+        // {
+        //     Caption = 'Preferred Day';
+        //     Description = 'Select the preferred day of the week for service appointments.';
+        //     ExternalName = 'preferredappointmentdaycode';
+        //     ExternalType = 'Picklist';
+        //     InitValue = " ";
+        //     OptionCaption = ' ,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday';
+        //     OptionOrdinalValues = - 1, 0, 1, 2, 3, 4, 5, 6;
+        //     OptionMembers = " ",Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday;
+        // }
         field(112; PreferredSystemUserId; Guid)
         {
             Caption = 'Preferred User';

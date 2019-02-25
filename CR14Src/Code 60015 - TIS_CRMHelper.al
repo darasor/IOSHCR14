@@ -161,6 +161,27 @@ codeunit 60015 TIS_CRMHelper
         //DestinationRecordRef.GETTABLE(CRMProduct);
     end;
 
+    LOCAL procedure UpdateCRMProductBeforeInsertRecord(VAR CRMProduct: Record "CRM Product")
+    var
+    begin
+        //DestinationRecordRef.SETTABLE(CRMProduct);
+        CRMTypeHelper.SetCRMDecimalsSupportedValue(CRMProduct);
+        //DestinationRecordRef.GETTABLE(CRMProduct);
+    end;
+
+    LOCAL procedure UpdateItemAfterTransferRecordFields(CRMProduct: Record "CRM Product"; VAR Item: Record Item) AdditionalFieldsWereModified: Boolean
+    var
+        Blocked: Boolean;
+    begin
+        //SourceRecordRef.SETTABLE(CRMProduct);
+        //DestinationRecordRef.SETTABLE(Item);
+
+        Blocked := CRMProduct.StateCode <> CRMProduct.StateCode::Active;
+        IF CRMTypeHelper.UpdateItemBlockedIfChanged(Item, Blocked) THEN
+            //DestinationRecordRef.GETTABLE(Item);
+            AdditionalFieldsWereModified := TRUE;
+
+    end;
 
     procedure UpdateCRMPriceListItem(VAR CRMProduct: Record "CRM Product") AdditionalFieldsWereModified: Boolean
     var

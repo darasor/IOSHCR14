@@ -5,6 +5,7 @@
             "type": "al",
             "request": "launch",
             "name": "Microsoft cloud sandbox",
+            "server": "https://businesscentral.dynamics.com/50d9af35-0749-44d0-b9a6-25e9e75b0215/",
             "startupObjectId": 22,
             "startupObjectType": "Page",
             //"schemaUpdateMode": "Recreate",
